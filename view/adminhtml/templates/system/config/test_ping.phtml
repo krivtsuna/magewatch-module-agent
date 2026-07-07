@@ -1,0 +1,18 @@
+<?php
+/** @var \MageWatch\Agent\Block\Adminhtml\System\Config\TestPing $block */
+?>
+<div id="magewatch-test-ping-wrapper">
+    <?= $block->getButtonHtml() ?>
+    <span id="magewatch-test-ping-result" style="margin-left: 10px; font-weight: bold;"></span>
+</div>
+<script type="text/x-magento-init">
+{
+    "#magewatch-test-ping-wrapper": {
+        "MageWatch_Agent/js/test-ping": {
+            "ajaxUrl": "<?= $block->escapeUrl($block->getAjaxUrl()) ?>",
+            "buttonId": "magewatch-test-ping-button",
+            "resultId": "magewatch-test-ping-result"
+        }
+    }
+}
+</script>

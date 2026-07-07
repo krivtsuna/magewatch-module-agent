@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/config.xsd">
+    <default>
+        <magewatch>
+            <agent>
+                <enabled>0</enabled>
+                <endpoint_url><![CDATA[https://magewatch.io/api/v1/ingest]]></endpoint_url>
+                <site_token backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
+                <stuck_cron_threshold_minutes>30</stuck_cron_threshold_minutes>
+            </agent>
+            <collectors>
+                <indexer>1</indexer>
+                <cron>1</cron>
+                <queue>1</queue>
+                <order_stats>1</order_stats>
+                <log>1</log>
+                <system>1</system>
+                <security>1</security>
+                <composer>1</composer>
+            </collectors>
+        </magewatch>
+    </default>
+</config>

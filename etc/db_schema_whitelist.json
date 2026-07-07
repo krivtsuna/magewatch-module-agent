@@ -1,0 +1,13 @@
+{
+    "magewatch_log_offset": {
+        "column": {
+            "file_path": true,
+            "byte_offset": true,
+            "updated_at": true
+        },
+        "index": {},
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="MageWatch\Agent\Model\LogOffset\OffsetReaderInterface" type="MageWatch\Agent\Model\LogOffset\DbOffsetStore"/>
+
+    <!--
+        Scoped logger: routes only MageWatch classes to var/log/magewatch.log.
+        Deliberately NOT a global preference for Psr\Log\LoggerInterface -
+        that would redirect the entire application's logging.
+    -->
+    <virtualType name="MageWatch\Agent\Logger\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">magewatch</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">MageWatch\Agent\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="MageWatch\Agent\Model\PayloadBuilder">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="MageWatch\Agent\Cron\CollectAndSend">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="MageWatch\Agent\Model\RemoteConfigSync">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="MageWatch\Agent\Model\CollectorPool">
+        <arguments>
+            <argument name="collectors" xsi:type="array">
+                <item name="indexer" xsi:type="object">MageWatch\Agent\Model\Collector\IndexerCollector</item>
+                <item name="cron" xsi:type="object">MageWatch\Agent\Model\Collector\CronCollector</item>
+                <item name="queue" xsi:type="object">MageWatch\Agent\Model\Collector\QueueCollector</item>
+                <item name="order_stats" xsi:type="object">MageWatch\Agent\Model\Collector\OrderStatsCollector</item>
+                <item name="log" xsi:type="object">MageWatch\Agent\Model\Collector\LogCollector</item>
+                <item name="system" xsi:type="object">MageWatch\Agent\Model\Collector\SystemCollector</item>
+                <item name="security" xsi:type="object">MageWatch\Agent\Model\Collector\SecurityCollector</item>
+                <item name="composer" xsi:type="object">MageWatch\Agent\Model\Collector\ComposerCollector</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="magewatch_send" xsi:type="object">MageWatch\Agent\Console\Command\SendCommand</item>
+                <item name="magewatch_status" xsi:type="object">MageWatch\Agent\Console\Command\StatusCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
