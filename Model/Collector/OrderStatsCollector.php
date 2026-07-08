@@ -10,15 +10,15 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Sql\Expression;
 
 /**
- * Reports order count and base-currency revenue per hour for the last 24
- * hours via a single aggregated query. No anomaly detection is done here -
- * the SaaS side interprets the raw series.
+ * Reports order count and base-currency revenue per hour for the last 7
+ * days via a single aggregated query. No anomaly detection is done here -
+ * the SaaS side interprets the raw series and persists hourly buckets.
  */
 class OrderStatsCollector implements CollectorInterface
 {
     private const CODE = 'order_stats';
 
-    private const HOURS = 24;
+    private const HOURS = 168;
 
     public function __construct(
         private readonly ResourceConnection $resourceConnection,

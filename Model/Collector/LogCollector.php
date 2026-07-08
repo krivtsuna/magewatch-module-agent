@@ -12,7 +12,8 @@ use Magento\Framework\Filesystem;
 use Magento\Framework\Filesystem\Directory\ReadInterface;
 
 /**
- * Counts new lines appended to var/log/system.log and var/log/exception.log
+ * Counts new lines appended to var/log/system.log, var/log/exception.log,
+ * and var/log/payment.log
  * since the previous cron run, and extracts recent exception messages.
  *
  * Only the delta since the last recorded offset is read, so cost stays
@@ -26,6 +27,7 @@ class LogCollector implements CollectorInterface
 
     private const SYSTEM_LOG = 'system.log';
     private const EXCEPTION_LOG = 'exception.log';
+    private const PAYMENT_LOG = 'payment.log';
 
     private const MAX_EXCEPTION_MESSAGES = 5;
     private const MAX_MESSAGE_LENGTH = 200;
@@ -49,14 +51,18 @@ class LogCollector implements CollectorInterface
 
         [$systemNewLines,] = $this->readDelta($logDirectory, self::SYSTEM_LOG);
         [$exceptionNewLines, $exceptionChunk] = $this->readDelta($logDirectory, self::EXCEPTION_LOG);
+        [$paymentNewLines, $paymentChunk] = $this->readDelta($logDirectory, self::PAYMENT_LOG);
 
         return [
             'logs' => [
                 'system_new_lines' => $systemNewLines,
                 'exception_new_lines' => $exceptionNewLines,
+                'payment_new_lines' => $paymentNewLines,
                 'system_log_bytes' => $this->logFileBytes($logDirectory, self::SYSTEM_LOG),
                 'exception_log_bytes' => $this->logFileBytes($logDirectory, self::EXCEPTION_LOG),
+                'payment_log_bytes' => $this->logFileBytes($logDirectory, self::PAYMENT_LOG),
                 'recent_exceptions' => $this->extractExceptionMessages($exceptionChunk),
+                'recent_payment_errors' => PaymentLogParser::extractMessages($paymentChunk),
             ],
         ];
     }
