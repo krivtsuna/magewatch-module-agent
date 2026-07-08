@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Model\Collector;
 
 use MageWatch\Agent\Api\CollectorInterface;
+use MageWatch\Agent\Model\LogOffset\InitialLogOffset;
 use MageWatch\Agent\Model\LogOffset\OffsetReaderInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
@@ -15,9 +16,9 @@ use Magento\Framework\Filesystem\Directory\ReadInterface;
  * since the previous cron run, and extracts recent exception messages.
  *
  * Only the delta since the last recorded offset is read, so cost stays
- * flat regardless of historical log size. Log rotation (current size <
- * stored offset) is detected and the offset resets to the start of the
- * new file.
+ * flat regardless of historical log size. On first sight of a file (offset 0),
+ * reading starts near the last ~7 days instead of byte zero. Log rotation
+ * (current size < stored offset) is detected and the bootstrap runs again.
  */
 class LogCollector implements CollectorInterface
 {
@@ -53,9 +54,20 @@ class LogCollector implements CollectorInterface
             'logs' => [
                 'system_new_lines' => $systemNewLines,
                 'exception_new_lines' => $exceptionNewLines,
+                'system_log_bytes' => $this->logFileBytes($logDirectory, self::SYSTEM_LOG),
+                'exception_log_bytes' => $this->logFileBytes($logDirectory, self::EXCEPTION_LOG),
                 'recent_exceptions' => $this->extractExceptionMessages($exceptionChunk),
             ],
         ];
+    }
+
+    private function logFileBytes(ReadInterface $logDirectory, string $relativePath): int
+    {
+        if (!$logDirectory->isExist($relativePath)) {
+            return 0;
+        }
+
+        return (int) ($logDirectory->stat($relativePath)['size'] ?? 0);
     }
 
     /**
@@ -71,11 +83,26 @@ class LogCollector implements CollectorInterface
         $size = (int) ($stat['size'] ?? 0);
 
         $absolutePath = $logDirectory->getAbsolutePath($relativePath);
-        $offset = $this->offsetReader->getOffset($absolutePath);
+        $storedOffset = $this->offsetReader->getOffset($absolutePath);
+        $offset = $storedOffset;
 
         if ($offset > $size) {
             // File was rotated/truncated since the last run.
             $offset = 0;
+        }
+
+        $resolvedOffset = InitialLogOffset::resolve(
+            $offset,
+            $size,
+            (int) ($stat['mtime'] ?? time()),
+        );
+
+        if ($resolvedOffset > $storedOffset) {
+            // Skip ancient log bytes we will never report (first install or post-rotation).
+            $this->offsetReader->setOffset($absolutePath, $resolvedOffset);
+            $offset = $resolvedOffset;
+        } else {
+            $offset = $resolvedOffset;
         }
 
         if ($offset >= $size) {

@@ -88,6 +88,7 @@ bin/magento magewatch:send --force
 - Collectors implement `CollectorInterface`; failures are logged and listed in `collector_errors` without breaking the run.
 - Delivery uses Magento's Curl client (TLS verification on, 5s connect / 10s total timeout).
 - Log line deltas use the `magewatch_log_offset` DB table (multi-node safe).
+- On first install, log reading starts at the last ~7 days (not byte zero of multi-GB files). Each heartbeat then reads only new appended lines (up to 5 MB per run until caught up).
 
 ## Tests
 
