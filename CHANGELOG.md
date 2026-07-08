@@ -34,6 +34,31 @@ Version numbers follow [SemVer](https://semver.org/). Packagist reads versions f
 
 [1.0.2]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.2
 
+## [1.0.6] - 2026-07-08
+
+### Added
+
+- Origin storefront probe detects Magento generic error pages in the HTML response and reports `homepage_magento_error` / `checkout_magento_error` in each heartbeat.
+
+[1.0.6]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.6
+
+## [1.0.5] - 2026-07-08
+
+### Fixed
+
+- Indexer backlog now matches `bin/magento indexer:status` (distinct pending entities, not raw changelog row count).
+- Disabled indexers (e.g. legacy flat indexers) are omitted from the heartbeat list.
+
+[1.0.5]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.5
+
+## [1.0.4] - 2026-07-08
+
+### Added
+
+- **Error report collector** — reads the newest files from `var/report` (Magento exception report dumps) and sends message, URL, and class in each heartbeat.
+
+[1.0.4]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.4
+
 ## [1.0.3] - 2026-07-08
 
 ### Added

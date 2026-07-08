@@ -46,6 +46,7 @@
                 <item name="security" xsi:type="object">MageWatch\Agent\Model\Collector\SecurityCollector</item>
                 <item name="composer" xsi:type="object">MageWatch\Agent\Model\Collector\ComposerCollector</item>
                 <item name="storefront_probe" xsi:type="object">MageWatch\Agent\Model\Collector\StorefrontProbeCollector</item>
+                <item name="report" xsi:type="object">MageWatch\Agent\Model\Collector\ReportCollector</item>
             </argument>
         </arguments>
     </type>

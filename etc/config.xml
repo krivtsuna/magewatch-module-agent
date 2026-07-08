@@ -18,6 +18,7 @@
                 <security>1</security>
                 <composer>1</composer>
                 <storefront_probe>1</storefront_probe>
+                <report>1</report>
             </collectors>
         </magewatch>
     </default>

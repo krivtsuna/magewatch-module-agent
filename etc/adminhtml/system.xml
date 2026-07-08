@@ -85,6 +85,11 @@
                     <comment>Checks homepage and checkout from the Magento server (origin) to avoid false WAF alerts.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="report" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Error Report Collector</label>
+                    <comment>Reads the newest files from var/report (Magento error report dumps).</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
             </group>
         </section>
     </system>
