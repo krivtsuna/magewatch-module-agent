@@ -34,12 +34,19 @@ Version numbers follow [SemVer](https://semver.org/). Packagist reads versions f
 
 [1.0.2]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.2
 
+## [1.0.7] - 2026-07-08
+
+### Fixed
+- **Indexer collector** — use `ConfigInterface::getIndexers()` instead of non-existent `IndexerRegistry::getIndexers()` (broken on Magento 2.4.7–2.4.8).
+- **Report collector** — fall back to `var/report` when `DirectoryList::REPORT` is not defined.
+
 ## [1.0.6] - 2026-07-08
 
 ### Added
 
 - Origin storefront probe detects Magento generic error pages in the HTML response and reports `homepage_magento_error` / `checkout_magento_error` in each heartbeat.
 
+[1.0.7]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.7
 [1.0.6]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.6
 
 ## [1.0.5] - 2026-07-08

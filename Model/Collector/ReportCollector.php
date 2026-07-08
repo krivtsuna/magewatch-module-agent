@@ -36,7 +36,7 @@ class ReportCollector implements CollectorInterface
 
     public function collect(): array
     {
-        $reportDirectory = $this->filesystem->getDirectoryRead(DirectoryList::REPORT);
+        $reportDirectory = $this->getReportDirectory();
         $watermark = $this->offsetReader->getOffset(self::WATERMARK_KEY);
         $files = $this->listReportFiles($reportDirectory);
 
@@ -134,5 +134,16 @@ class ReportCollector implements CollectorInterface
         $file->close();
 
         return $content;
+    }
+
+    private function getReportDirectory(): ReadInterface
+    {
+        if (defined(DirectoryList::class.'::REPORT')) {
+            return $this->filesystem->getDirectoryRead(DirectoryList::REPORT);
+        }
+
+        $varDirectory = $this->filesystem->getDirectoryRead(DirectoryList::VAR_DIR);
+
+        return $this->filesystem->getDirectoryReadByPath($varDirectory->getAbsolutePath().'/report');
     }
 }

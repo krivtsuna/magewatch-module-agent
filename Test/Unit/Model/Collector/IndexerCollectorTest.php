@@ -8,15 +8,14 @@ use MageWatch\Agent\Model\Collector\IndexerCollector;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
-use Magento\Framework\Indexer\IndexerInterface;
-use Magento\Framework\Indexer\IndexerRegistry;
+use Magento\Framework\Indexer\ConfigInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class IndexerCollectorTest extends TestCase
 {
     private ResourceConnection&MockObject $resourceConnection;
-    private IndexerRegistry&MockObject $indexerRegistry;
+    private ConfigInterface&MockObject $indexerConfig;
     private AdapterInterface&MockObject $connection;
     private Select&MockObject $select;
     private IndexerCollector $collector;
@@ -24,7 +23,7 @@ class IndexerCollectorTest extends TestCase
     protected function setUp(): void
     {
         $this->resourceConnection = $this->createMock(ResourceConnection::class);
-        $this->indexerRegistry = $this->createMock(IndexerRegistry::class);
+        $this->indexerConfig = $this->createMock(ConfigInterface::class);
         $this->connection = $this->createMock(AdapterInterface::class);
         $this->select = $this->createMock(Select::class);
 
@@ -38,7 +37,7 @@ class IndexerCollectorTest extends TestCase
         $this->resourceConnection->method('getTableName')->willReturnArgument(0);
         $this->connection->method('select')->willReturn($this->select);
 
-        $this->collector = new IndexerCollector($this->resourceConnection, $this->indexerRegistry);
+        $this->collector = new IndexerCollector($this->resourceConnection, $this->indexerConfig);
     }
 
     public function testGetCode(): void
@@ -110,11 +109,9 @@ class IndexerCollectorTest extends TestCase
     {
         $indexers = [];
         foreach ($ids as $id) {
-            $indexer = $this->createMock(IndexerInterface::class);
-            $indexer->method('getId')->willReturn($id);
-            $indexers[] = $indexer;
+            $indexers[$id] = ['indexer_id' => $id];
         }
 
-        $this->indexerRegistry->method('getIndexers')->willReturn($indexers);
+        $this->indexerConfig->method('getIndexers')->willReturn($indexers);
     }
 }

@@ -7,7 +7,7 @@ namespace MageWatch\Agent\Model\Collector;
 use MageWatch\Agent\Api\CollectorInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
-use Magento\Framework\Indexer\IndexerRegistry;
+use Magento\Framework\Indexer\ConfigInterface;
 
 /**
  * Reports indexer status and, for indexers running in "update by schedule"
@@ -21,7 +21,7 @@ class IndexerCollector implements CollectorInterface
 
     public function __construct(
         private readonly ResourceConnection $resourceConnection,
-        private readonly IndexerRegistry $indexerRegistry,
+        private readonly ConfigInterface $indexerConfig,
     ) {
     }
 
@@ -34,17 +34,14 @@ class IndexerCollector implements CollectorInterface
     {
         $connection = $this->resourceConnection->getConnection();
 
-        $registeredIds = array_map(
-            static fn ($indexer) => $indexer->getId(),
-            $this->indexerRegistry->getIndexers()
-        );
+        $registeredIds = array_keys($this->indexerConfig->getIndexers());
 
         $states = $this->fetchIndexerStates($connection);
         $views = $this->fetchMviewStates($connection);
 
         $indexers = [];
         foreach ($states as $indexerId => $state) {
-            if (! in_array($indexerId, $registeredIds, true)) {
+            if ($registeredIds !== [] && ! in_array($indexerId, $registeredIds, true)) {
                 continue;
             }
 
