@@ -80,6 +80,11 @@
                     <comment>Sends composer.lock packages and enabled modules for MageVulnDB extension checks.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="storefront_probe" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Storefront Probe Collector</label>
+                    <comment>Checks homepage and checkout from the Magento server (origin) to avoid false WAF alerts.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
             </group>
         </section>
     </system>

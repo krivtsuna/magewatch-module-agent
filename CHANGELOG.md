@@ -33,5 +33,13 @@ Version numbers follow [SemVer](https://semver.org/). Packagist reads versions f
 - Log collector reports `exception_log_bytes` and `system_log_bytes` in each heartbeat for MageWatch size warnings.
 
 [1.0.2]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.2
+
+## [1.0.3] - 2026-07-08
+
+### Added
+
+- **Storefront probe collector** — checks homepage and `/checkout` from the Magento server via `127.0.0.1` (origin), so MageWatch can tell real outages from Cloudflare/WAF blocks on external monitors. No client IP whitelist required.
+
+[1.0.3]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.3
 [1.0.1]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.1
 [1.0.0]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.0

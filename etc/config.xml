@@ -17,6 +17,7 @@
                 <system>1</system>
                 <security>1</security>
                 <composer>1</composer>
+                <storefront_probe>1</storefront_probe>
             </collectors>
         </magewatch>
     </default>
