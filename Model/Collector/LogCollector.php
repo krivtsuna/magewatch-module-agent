@@ -29,9 +29,6 @@ class LogCollector implements CollectorInterface
     private const EXCEPTION_LOG = 'exception.log';
     private const PAYMENT_LOG = 'payment.log';
 
-    private const MAX_EXCEPTION_MESSAGES = 5;
-    private const MAX_MESSAGE_LENGTH = 200;
-
     private const MAX_BYTES_PER_RUN = 5_000_000;
 
     public function __construct(
@@ -61,7 +58,7 @@ class LogCollector implements CollectorInterface
                 'system_log_bytes' => $this->logFileBytes($logDirectory, self::SYSTEM_LOG),
                 'exception_log_bytes' => $this->logFileBytes($logDirectory, self::EXCEPTION_LOG),
                 'payment_log_bytes' => $this->logFileBytes($logDirectory, self::PAYMENT_LOG),
-                'recent_exceptions' => $this->extractExceptionMessages($exceptionChunk),
+                'recent_exceptions' => ExceptionLogParser::extractMessages($exceptionChunk),
                 'recent_payment_errors' => PaymentLogParser::extractMessages($paymentChunk),
             ],
         ];
@@ -134,27 +131,5 @@ class LogCollector implements CollectorInterface
         $this->offsetReader->setOffset($absolutePath, $offset + strlen($completeChunk));
 
         return [$newLines, $completeChunk];
-    }
-
-    /**
-     * @return string[]
-     */
-    private function extractExceptionMessages(string $chunk): array
-    {
-        if ($chunk === '') {
-            return [];
-        }
-
-        $messages = [];
-        foreach (preg_split('/\r\n|\r|\n/', $chunk) as $line) {
-            if (preg_match('/^\[[^\]]+\]\s+\S+\.\S+:\s*(.+)$/', $line, $matches)) {
-                $message = trim($matches[1]);
-                if ($message !== '') {
-                    $messages[] = mb_substr($message, 0, self::MAX_MESSAGE_LENGTH);
-                }
-            }
-        }
-
-        return array_slice(array_values(array_unique($messages)), -self::MAX_EXCEPTION_MESSAGES);
     }
 }

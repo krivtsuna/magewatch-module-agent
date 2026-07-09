@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Model\Collector;
 
 use MageWatch\Agent\Api\CollectorInterface;
+use MageWatch\Agent\Model\ModulePackageResolver;
+use MageWatch\Agent\Model\ModuleVersionReader;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Filesystem;
 
@@ -19,6 +21,8 @@ class ComposerCollector implements CollectorInterface
 
     public function __construct(
         private readonly Filesystem $filesystem,
+        private readonly ModulePackageResolver $modulePackageResolver,
+        private readonly ModuleVersionReader $moduleVersionReader,
     ) {
     }
 
@@ -34,12 +38,15 @@ class ComposerCollector implements CollectorInterface
             DIRECTORY_SEPARATOR
         );
 
+        $enabledModules = $this->readEnabledModules($root);
+
         return [
             'composer' => [
-                'packages' => $this->readComposerPackages($root),
+                'packages' => $this->readComposerPackages($root, $enabledModules),
             ],
             'modules' => [
-                'enabled' => $this->readEnabledModules($root),
+                'enabled' => $enabledModules,
+                'installed' => $this->readInstalledModules($enabledModules),
             ],
         ];
     }
@@ -47,7 +54,7 @@ class ComposerCollector implements CollectorInterface
     /**
      * @return list<array{name: string, version: string}>
      */
-    private function readComposerPackages(string $root): array
+    private function readComposerPackages(string $root, array $enabledModules): array
     {
         $lockPath = $root.DIRECTORY_SEPARATOR.'composer.lock';
 
@@ -60,7 +67,7 @@ class ComposerCollector implements CollectorInterface
             return [];
         }
 
-        $packages = [];
+        $allPackages = [];
 
         foreach (array_merge($decoded['packages'] ?? [], $decoded['packages-dev'] ?? []) as $package) {
             if (! is_array($package)) {
@@ -74,17 +81,112 @@ class ComposerCollector implements CollectorInterface
                 continue;
             }
 
-            $packages[] = [
+            $allPackages[] = [
                 'name' => $name,
                 'version' => ltrim($version, 'v'),
             ];
+        }
 
-            if (count($packages) >= self::MAX_PACKAGES) {
+        if ($allPackages === []) {
+            return [];
+        }
+
+        $prioritized = $this->prioritizedPackageFilters($enabledModules);
+        $selected = [];
+        $selectedNames = [];
+
+        foreach ($allPackages as $package) {
+            if (! $this->isPrioritizedPackage($package['name'], $prioritized)) {
+                continue;
+            }
+
+            $selected[] = $package;
+            $selectedNames[$package['name']] = true;
+        }
+
+        foreach ($allPackages as $package) {
+            if (count($selected) >= self::MAX_PACKAGES) {
                 break;
+            }
+
+            if (isset($selectedNames[$package['name']])) {
+                continue;
+            }
+
+            $selected[] = $package;
+            $selectedNames[$package['name']] = true;
+        }
+
+        return $selected;
+    }
+
+    /**
+     * @param  array<string, int>  $enabledModules
+     * @return array{exact: array<string, true>, vendor_prefixes: list<string>}
+     */
+    private function prioritizedPackageFilters(array $enabledModules): array
+    {
+        $exact = [];
+        $vendorPrefixes = [];
+
+        foreach (array_keys($enabledModules) as $moduleName) {
+            if (str_starts_with($moduleName, 'Magento_')) {
+                continue;
+            }
+
+            foreach ($this->modulePackageResolver->packageCandidates($moduleName) as $candidate) {
+                $exact[$candidate] = true;
+            }
+
+            foreach ($this->modulePackageResolver->vendorPrefixesForModule($moduleName) as $vendorPrefix) {
+                $vendorPrefixes[$vendorPrefix] = true;
             }
         }
 
-        return $packages;
+        return [
+            'exact' => $exact,
+            'vendor_prefixes' => array_keys($vendorPrefixes),
+        ];
+    }
+
+    /**
+     * @param  array{exact: array<string, true>, vendor_prefixes: list<string>}  $prioritized
+     */
+    private function isPrioritizedPackage(string $packageName, array $prioritized): bool
+    {
+        if (isset($prioritized['exact'][$packageName])) {
+            return true;
+        }
+
+        foreach ($prioritized['vendor_prefixes'] as $vendorPrefix) {
+            if (str_starts_with($packageName, $vendorPrefix.'/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, int>  $enabledModules
+     * @return array<string, array{version: ?string, package: ?string, source: ?string, path: string}>
+     */
+    private function readInstalledModules(array $enabledModules): array
+    {
+        $installed = [];
+
+        foreach (array_keys($enabledModules) as $moduleName) {
+            if (str_starts_with($moduleName, 'Magento_')) {
+                continue;
+            }
+
+            $meta = $this->moduleVersionReader->readInstalled($moduleName);
+            if ($meta !== null) {
+                $installed[$moduleName] = $meta;
+            }
+        }
+
+        return $installed;
     }
 
     /**

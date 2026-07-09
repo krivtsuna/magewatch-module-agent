@@ -3,6 +3,20 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.0.8] - 2026-07-09
+
+### Added
+
+- Composer collector prioritizes `composer.lock` packages for **enabled third-party modules** (name candidates + vendor prefixes) instead of only the first 400 alphabetical entries.
+- Heartbeat includes `modules.installed` with version and Composer package name from each module's `composer.json` or `module.xml` (covers `app/code` modules).
+
+### Fixed
+
+- Module-to-Composer package name resolution for vendors like Amasty (`amasty/advanced-review` vs `amasty/module-advancedreview`).
+- Exception log parser extracts JSON and Report ID messages for clearer MageWatch alerts.
+
+[1.0.8]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.8
+
 ## [1.0.0] - 2026-07-07
 
 ### Added
@@ -35,12 +49,6 @@ Version numbers follow [SemVer](https://semver.org/). Packagist reads versions f
 [1.0.2]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.2
 
 ## [1.0.7] - 2026-07-08
-
-### Fixed
-- **Indexer collector** — use `ConfigInterface::getIndexers()` instead of non-existent `IndexerRegistry::getIndexers()` (broken on Magento 2.4.7–2.4.8).
-- **Report collector** — fall back to `var/report` when `DirectoryList::REPORT` is not defined.
-
-## [1.0.6] - 2026-07-08
 
 ### Added
 
