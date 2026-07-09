@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.0.9] - 2026-07-09
+
+### Added
+
+- Read Mirasvit-style `version.json` and `@version` from `registration.php` when `composer.json` / `setup_version` are missing.
+
+[1.0.9]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.9
+
 ## [1.0.8] - 2026-07-09
 
 ### Added

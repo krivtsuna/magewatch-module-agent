@@ -13,6 +13,7 @@ class ModuleVersionReader
 {
     public function __construct(
         private readonly ComponentRegistrar $componentRegistrar,
+        private readonly ModuleVersionFileReader $versionFileReader,
     ) {
     }
 
@@ -27,47 +28,16 @@ class ModuleVersionReader
             return null;
         }
 
-        $package = null;
-        $version = null;
-        $source = null;
+        $meta = $this->versionFileReader->readFromPath($modulePath);
 
-        $composerJsonPath = $modulePath.DIRECTORY_SEPARATOR.'composer.json';
-        if (is_readable($composerJsonPath)) {
-            $decoded = json_decode((string) file_get_contents($composerJsonPath), true);
-            if (is_array($decoded)) {
-                if (is_string($decoded['name'] ?? null) && $decoded['name'] !== '') {
-                    $package = $decoded['name'];
-                }
-                if (is_string($decoded['version'] ?? null) && $decoded['version'] !== '') {
-                    $version = ltrim($decoded['version'], 'v');
-                    $source = 'composer.json';
-                }
-            }
-        }
-
-        if ($version === null) {
-            $moduleXmlPath = $modulePath.DIRECTORY_SEPARATOR.'etc'.DIRECTORY_SEPARATOR.'module.xml';
-            if (is_readable($moduleXmlPath)) {
-                $xml = @simplexml_load_file($moduleXmlPath);
-                if ($xml !== false) {
-                    $attributes = $xml->module->attributes();
-                    $setupVersion = is_object($attributes) ? (string) ($attributes['setup_version'] ?? '') : '';
-                    if ($setupVersion !== '') {
-                        $version = $setupVersion;
-                        $source = 'module.xml';
-                    }
-                }
-            }
-        }
-
-        if ($package === null && $version === null) {
+        if ($meta === null) {
             return null;
         }
 
         return [
-            'version' => $version,
-            'package' => $package,
-            'source' => $source,
+            'version' => $meta['version'],
+            'package' => $meta['package'],
+            'source' => $meta['source'],
             'path' => str_contains($modulePath, DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR) ? 'vendor' : 'app/code',
         ];
     }
