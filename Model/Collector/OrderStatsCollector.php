@@ -70,6 +70,19 @@ class OrderStatsCollector implements CollectorInterface
             }
         }
 
-        return ['orders_hourly' => array_values($buckets)];
+        $stuckHours = 2;
+        $stuckSince = $now->modify(sprintf('-%d hours', $stuckHours))->format('Y-m-d H:i:s');
+        $stuckSelect = $connection->select()
+            ->from($table, ['cnt' => new Expression('COUNT(*)')])
+            ->where('status = ?', 'pending_payment')
+            ->where('created_at < ?', $stuckSince);
+        $pendingPaymentStuck = (int) $connection->fetchOne($stuckSelect);
+
+        return [
+            'orders_hourly' => array_values($buckets),
+            'orders' => [
+                'pending_payment_stuck' => $pendingPaymentStuck,
+            ],
+        ];
     }
 }

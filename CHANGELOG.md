@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.0.10] - 2026-07-09
+
+### Added
+
+- Report count of orders stuck in `pending_payment` for over 2 hours (`orders.pending_payment_stuck`).
+
+[1.0.10]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.10
+
 ## [1.0.9] - 2026-07-09
 
 ### Added

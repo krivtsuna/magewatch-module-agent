@@ -41,7 +41,7 @@ class PayloadBuilderTest extends TestCase
 
         $payload = $builder->build();
 
-        $this->assertSame('1.0.9', $payload['agent_version']);
+        $this->assertSame('1.0.10', $payload['agent_version']);
         $this->assertArrayNotHasKey('site_token', $payload);
         $this->assertSame('2026-07-03T10:05:00+00:00', $payload['collected_at']);
         $this->assertSame([['id' => 'catalog_product_price']], $payload['indexers']);
