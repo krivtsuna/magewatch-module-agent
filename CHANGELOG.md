@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.0.11] - 2026-07-09
+
+### Added
+
+- Infrastructure collector probes Redis cache backend reachability and OpenSearch/Elasticsearch cluster health (`infrastructure.redis`, `infrastructure.search`).
+
+[1.0.11]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.11
+
 ## [1.0.10] - 2026-07-09
 
 ### Added
