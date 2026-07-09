@@ -20,7 +20,7 @@ class StorefrontProbeCollector implements CollectorInterface
 
     private const BODY_READ_LIMIT = 65_536;
 
-    private const USER_AGENT = 'MageWatch-Agent/1.0.11';
+    private const USER_AGENT = 'MageWatch-Agent/1.0.13';
 
     public function __construct(
         private readonly StoreManagerInterface $storeManager,

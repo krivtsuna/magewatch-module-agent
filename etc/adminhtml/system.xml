@@ -17,7 +17,7 @@
                 </field>
                 <field id="endpoint_url" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Endpoint URL</label>
-                    <comment>HTTPS endpoint the agent posts the JSON payload to. For Magento in Docker talking to a local MageWatch instance, use http://host.docker.internal:8091/api/v1/ingest (not localhost).</comment>
+                    <comment>Ingest URL for heartbeats. Production default: https://magewatch.io/api/v1/ingest. Change only for self-hosted MageWatch (see MageWatch install docs for Docker).</comment>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>
@@ -88,6 +88,16 @@
                 <field id="report" translate="label comment" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Error Report Collector</label>
                     <comment>Reads the newest files from var/report (Magento error report dumps).</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="infrastructure" translate="label comment" type="select" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Infrastructure Collector</label>
+                    <comment>Probes Redis cache backend and OpenSearch/Elasticsearch cluster reachability.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="database" translate="label comment" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Database Collector</label>
+                    <comment>MySQL health via SHOW GLOBAL STATUS and long-running InnoDB transactions (read-only).</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>

@@ -19,6 +19,8 @@
                 <composer>1</composer>
                 <storefront_probe>1</storefront_probe>
                 <report>1</report>
+                <infrastructure>1</infrastructure>
+                <database>1</database>
             </collectors>
         </magewatch>
     </default>

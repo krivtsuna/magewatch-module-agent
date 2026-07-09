@@ -3,6 +3,23 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.0.13] - 2026-07-09
+
+### Added
+
+- **Database collector** — MySQL `SHOW GLOBAL STATUS` (threads, slow_queries counter) and long-running InnoDB transactions via `information_schema`.
+- **Inode usage** in the system collector (`inode_free_percent`) when `df -i` is available on the host.
+
+[1.0.13]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.13
+
+## [1.0.12] - 2026-07-09
+
+### Changed
+
+- Clarified API endpoint admin help text: production URL default, Docker notes moved to MageWatch docs.
+
+[1.0.12]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.12
+
 ## [1.0.11] - 2026-07-09
 
 ### Added

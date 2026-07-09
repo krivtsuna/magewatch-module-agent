@@ -49,7 +49,7 @@ class SystemCollector implements CollectorInterface
                 'php' => PHP_VERSION,
                 'store_base_urls' => $this->getStoreBaseUrls(),
             ],
-            'system' => $this->getDiskStats() + ['disabled_caches' => $this->getDisabledCaches()],
+            'system' => $this->getDiskStats() + $this->getInodeStats() + ['disabled_caches' => $this->getDisabledCaches()],
         ];
     }
 
@@ -69,6 +69,58 @@ class SystemCollector implements CollectorInterface
         return [
             'disk_free_bytes' => (int) $free,
             'disk_free_percent' => round(($free / $total) * 100, 1),
+        ];
+    }
+
+    /**
+     * @return array{inode_free: ?int, inode_total: ?int, inode_free_percent: ?float}
+     */
+    private function getInodeStats(): array
+    {
+        $empty = [
+            'inode_free' => null,
+            'inode_total' => null,
+            'inode_free_percent' => null,
+        ];
+
+        if (PHP_OS_FAMILY !== 'Linux' && PHP_OS_FAMILY !== 'Darwin') {
+            return $empty;
+        }
+
+        if (! \function_exists('shell_exec')) {
+            return $empty;
+        }
+
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        if (\in_array('shell_exec', $disabled, true)) {
+            return $empty;
+        }
+
+        $rootPath = $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath();
+        $escaped = escapeshellarg($rootPath);
+        $output = @shell_exec("df -i {$escaped} 2>/dev/null | awk 'NR==2 {print $2, $3, $4}'");
+
+        if (! is_string($output) || trim($output) === '') {
+            return $empty;
+        }
+
+        $parts = preg_split('/\s+/', trim($output));
+        if ($parts === false || count($parts) < 3) {
+            return $empty;
+        }
+
+        $total = (int) $parts[0];
+        $used = (int) $parts[1];
+        $free = (int) $parts[2];
+
+        if ($total <= 0) {
+            return $empty;
+        }
+
+        return [
+            'inode_free' => $free,
+            'inode_total' => $total,
+            'inode_free_percent' => round(($free / $total) * 100, 1),
         ];
     }
 
