@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.2] - 2026-07-10
+
+### Fixed
+
+- Declare PHP 8.4 compatibility in `composer.json` (Magento 2.4.8+).
+
+[1.2.2]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.2
+
 ## [1.2.1] - 2026-07-10
 
 ### Fixed
