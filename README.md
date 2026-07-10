@@ -54,6 +54,12 @@ From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch p
 - **What it collects:** sanitized JS error messages, add-to-cart/checkout/success counters, LCP/CLS/INP — no cookies, no PII, no session IDs.
 - **Disable:** set Frontend monitoring to No — removes injection without uninstalling the agent.
 
+## Security collector (v1.2.0)
+
+The agent whitelists legitimate Magento `pub/` PHP files and compares content hashes against `vendor/magento/magento2-base` when available. `pub/cron.php` and other core files no longer false-positive as unexpected PHP; modified core files emit `core_pub_php_modified`. Deploy fingerprints (`static_version`, `composer_lock_hash`) are included in heartbeats for SaaS deploy correlation.
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
+
 ## Uninstall
 
 ```bash

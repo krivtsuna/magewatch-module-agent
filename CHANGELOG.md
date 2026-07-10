@@ -3,6 +3,16 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.0] - 2026-07-10
+
+### Fixed
+
+- **Security collector:** whitelist legitimate Magento `pub/` PHP files (`cron.php`, `errors/**`, etc.) and compare content hashes against `vendor/magento/magento2-base` — `pub/cron.php` no longer false-positives as unexpected PHP.
+- Emit `core_pub_php_modified` when a known core filename differs from the vendor baseline.
+- **Deploy fingerprint:** report `static_version` and `composer_lock_hash` in heartbeat for SaaS deploy correlation.
+
+[1.2.0]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.0
+
 ## [1.1.1] - 2026-07-10
 
 ### Fixed

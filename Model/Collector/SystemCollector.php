@@ -48,6 +48,8 @@ class SystemCollector implements CollectorInterface
                 'maintenance' => $this->maintenanceMode->isOn(),
                 'php' => PHP_VERSION,
                 'store_base_urls' => $this->getStoreBaseUrls(),
+                'static_version' => $this->readStaticContentVersion(),
+                'composer_lock_hash' => $this->readComposerLockHash(),
             ],
             'system' => $this->getDiskStats() + $this->getInodeStats() + ['disabled_caches' => $this->getDisabledCaches()],
         ];
@@ -150,5 +152,38 @@ class SystemCollector implements CollectorInterface
         }
 
         return array_values(array_unique($urls));
+    }
+
+    private function readStaticContentVersion(): ?string
+    {
+        $paths = [
+            $this->filesystem->getDirectoryRead(DirectoryList::PUB)->getAbsolutePath().'/static/deployed_version.txt',
+            $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath().'/var/.regenerate.lock',
+        ];
+
+        foreach ($paths as $path) {
+            if (! is_readable($path)) {
+                continue;
+            }
+
+            $content = trim((string) @file_get_contents($path));
+            if ($content !== '') {
+                return $content;
+            }
+        }
+
+        return null;
+    }
+
+    private function readComposerLockHash(): ?string
+    {
+        $lockPath = $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath().'/composer.lock';
+        if (! is_readable($lockPath)) {
+            return null;
+        }
+
+        $hash = @hash_file('sha256', $lockPath);
+
+        return is_string($hash) ? $hash : null;
     }
 }

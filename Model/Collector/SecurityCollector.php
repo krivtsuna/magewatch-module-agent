@@ -6,6 +6,7 @@ namespace MageWatch\Agent\Model\Collector;
 
 use MageWatch\Agent\Api\CollectorInterface;
 use MageWatch\Agent\Model\Clock;
+use MageWatch\Agent\Model\PubPhpIntegrityChecker;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -19,14 +20,6 @@ use Throwable;
 class SecurityCollector implements CollectorInterface
 {
     private const CODE = 'security';
-
-  /** @var list<string> */
-    private const ALLOWED_PUB_PHP = [
-        'index.php',
-        'static.php',
-        'get.php',
-        'health_check.php',
-    ];
 
   /** @var list<string> */
     private const SUSPICIOUS_PATTERNS = [
@@ -49,6 +42,7 @@ class SecurityCollector implements CollectorInterface
         private readonly Filesystem $filesystem,
         private readonly ResourceConnection $resourceConnection,
         private readonly Clock $clock,
+        private readonly PubPhpIntegrityChecker $pubPhpIntegrityChecker,
     ) {
     }
 
@@ -63,38 +57,21 @@ class SecurityCollector implements CollectorInterface
             $this->filesystem->getDirectoryRead(DirectoryList::PUB)->getAbsolutePath(),
             DIRECTORY_SEPARATOR
         ).DIRECTORY_SEPARATOR;
+        $rootPath = rtrim(
+            $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath(),
+            DIRECTORY_SEPARATOR
+        ).DIRECTORY_SEPARATOR;
+
+        $pubIntegrity = $this->pubPhpIntegrityChecker->scan($pubPath, $rootPath);
 
         return [
             'security' => [
-                'unexpected_pub_php' => $this->findUnexpectedPubPhp($pubPath),
+                'unexpected_pub_php' => $pubIntegrity['unexpected_pub_php'],
+                'core_pub_php_modified' => $pubIntegrity['core_pub_php_modified'],
                 'suspicious_patterns' => $this->scanSuspiciousPatterns($pubPath),
                 'new_admin_users' => $this->findNewAdminUsers(),
             ],
         ];
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function findUnexpectedPubPhp(string $pubPath): array
-    {
-        $unexpected = [];
-
-        foreach ($this->listPhpFilesInDirectory($pubPath) as $file) {
-            $basename = basename($file);
-            if (! in_array($basename, self::ALLOWED_PUB_PHP, true)) {
-                $unexpected[] = $this->relativePubPath($pubPath, $file);
-            }
-        }
-
-        $mediaPath = $pubPath.'media'.DIRECTORY_SEPARATOR;
-        if (is_dir($mediaPath)) {
-            foreach ($this->listPhpFilesInDirectory($mediaPath) as $file) {
-                $unexpected[] = $this->relativePubPath($pubPath, $file);
-            }
-        }
-
-        return array_values(array_unique($unexpected));
     }
 
     /**
@@ -177,20 +154,6 @@ class SecurityCollector implements CollectorInterface
             ->limit(10);
 
         return $connection->fetchAll($select);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function listPhpFilesInDirectory(string $directory): array
-    {
-        if (! is_dir($directory)) {
-            return [];
-        }
-
-        $files = glob($directory.'*.php') ?: [];
-
-        return array_values(array_filter($files, 'is_file'));
     }
 
     private function relativePubPath(string $pubPath, string $absolutePath): string
