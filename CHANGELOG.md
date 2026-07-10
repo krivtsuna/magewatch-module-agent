@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.1.1] - 2026-07-10
+
+### Fixed
+
+- **CSP:** whitelist `https://magewatch.io` for `script-src` (RUM loader) and `connect-src` (ingest beacons) via `etc/csp_whitelist.xml`.
+- RUM config inline script uses `SecureHtmlRenderer` nonce when Magento CSP is enabled.
+
+[1.1.1]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.1.1
+
 ## [1.1.0] - 2026-07-10
 
 ### Added

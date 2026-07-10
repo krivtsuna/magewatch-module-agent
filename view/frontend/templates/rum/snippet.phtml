@@ -1,10 +1,7 @@
 <?php if (!$block->isEnabled()) {
     return;
 }
-$key = $block->escapeJs($block->getPublicKey());
-$pageType = $block->escapeJs($block->getPageType());
-$ingest = $block->escapeJs($block->getIngestBaseUrl());
 $script = $block->escapeUrl($block->getScriptUrl());
 ?>
-<script>window.__mwRum={k:"<?= /* @noEscape */ $key ?>",p:"<?= /* @noEscape */ $pageType ?>",u:"<?= /* @noEscape */ $ingest ?>"};</script>
+<?= /* @noEscape */ $block->getConfigScriptHtml() ?>
 <script src="<?= /* @noEscape */ $script ?>" async></script>

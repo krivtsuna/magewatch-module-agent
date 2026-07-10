@@ -7,6 +7,7 @@ namespace MageWatch\Agent\Block;
 use MageWatch\Agent\Model\Config;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /**
  * Injects a cache-safe RUM loader on storefront pages (FPC/Varnish friendly).
@@ -16,6 +17,7 @@ class RumSnippet extends Template
     public function __construct(
         Context $context,
         private readonly Config $config,
+        private readonly ?SecureHtmlRenderer $secureRenderer = null,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -65,5 +67,22 @@ class RumSnippet extends Template
         $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://magewatch.io';
 
         return rtrim($base, '/') . '/ingest/rum';
+    }
+
+    public function getConfigScriptHtml(): string
+    {
+        $payload = json_encode([
+            'k' => $this->getPublicKey(),
+            'p' => $this->getPageType(),
+            'u' => $this->getIngestBaseUrl(),
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        $script = 'window.__mwRum=' . $payload . ';';
+
+        if ($this->secureRenderer !== null) {
+            return $this->secureRenderer->renderTag('script', [], $script, false);
+        }
+
+        return '<script>' . $script . '</script>';
     }
 }
