@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.2';
+    public const AGENT_VERSION = '1.2.3';
 
     public function __construct(
         private readonly Config $config,
@@ -59,5 +59,20 @@ class PayloadBuilder
         }
 
         return $payload;
+    }
+
+    /**
+     * Lightweight payload for the admin "Send Test Ping" button — skips slow
+     * collectors (storefront probes, pub/ scans) so the request returns quickly.
+     *
+     * @return array<string, mixed>
+     */
+    public function buildTestPing(): array
+    {
+        return [
+            'agent_version' => self::AGENT_VERSION,
+            'collected_at' => $this->clock->now()->format(DATE_ATOM),
+            'test_ping' => true,
+        ];
     }
 }

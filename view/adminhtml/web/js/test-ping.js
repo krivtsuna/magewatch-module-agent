@@ -15,6 +15,7 @@ define(['jquery'], function ($) {
                 url: config.ajaxUrl,
                 type: 'POST',
                 dataType: 'json',
+                timeout: 30000,
                 data: {
                     form_key: window.FORM_KEY
                 }
@@ -26,8 +27,12 @@ define(['jquery'], function ($) {
                     $result.css('color', 'red')
                         .text($.mage.__('Failed: %1').replace('%1', response.message));
                 }
-            }).fail(function () {
-                $result.css('color', 'red').text($.mage.__('Request failed.'));
+            }).fail(function (jqXHR, textStatus) {
+                if (textStatus === 'timeout') {
+                    $result.css('color', 'red').text($.mage.__('Request timed out after 30 seconds.'));
+                } else {
+                    $result.css('color', 'red').text($.mage.__('Request failed.'));
+                }
             }).always(function () {
                 $button.prop('disabled', false);
             });

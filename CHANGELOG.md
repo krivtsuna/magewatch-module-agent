@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.3] - 2026-07-10
+
+### Fixed
+
+- **Test ping:** send a lightweight payload (no storefront probes / pub/ scans) so the admin button returns in seconds, not minutes.
+- AJAX timeout with a clear error after 30 seconds.
+
+[1.2.3]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.3
+
 ## [1.2.2] - 2026-07-10
 
 ### Fixed

@@ -46,7 +46,7 @@ class TestPing extends Action implements HttpPostActionInterface
             ]);
         }
 
-        $payload = $this->payloadBuilder->build();
+        $payload = $this->payloadBuilder->buildTestPing();
         $transportResult = $this->httpClient->send($endpointUrl, $siteToken, $payload);
 
         $message = $transportResult->isSuccess()
