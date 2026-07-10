@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Console\Command;
 
 use MageWatch\Agent\Model\Config;
+use MageWatch\Agent\Model\CollectorPool;
 use MageWatch\Agent\Model\PayloadBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,6 +20,7 @@ class StatusCommand extends Command
 
     public function __construct(
         private readonly Config $config,
+        private readonly CollectorPool $collectorPool,
         private readonly PayloadBuilder $payloadBuilder
     ) {
         parent::__construct();
@@ -40,8 +42,14 @@ class StatusCommand extends Command
         $output->writeln('Site token: ' . ($this->config->getSiteToken() ? 'configured' : '(not configured)'));
         $output->writeln('Stuck cron threshold: ' . $this->config->getStuckCronThresholdMinutes() . ' min');
 
-        $collectors = ['indexer', 'cron', 'queue', 'order_stats', 'log', 'system', 'security'];
-        $enabled = array_filter($collectors, fn (string $code) => $this->config->isCollectorEnabled($code));
+        $collectors = array_map(
+            static fn ($collector) => $collector->getCode(),
+            $this->collectorPool->getCollectors()
+        );
+        $enabled = array_values(array_filter(
+            $collectors,
+            fn (string $code) => $this->config->isCollectorEnabled($code)
+        ));
         $output->writeln('Collectors: ' . ($enabled !== [] ? implode(', ', $enabled) : 'none'));
 
         $logFile = BP . '/var/log/magewatch.log';

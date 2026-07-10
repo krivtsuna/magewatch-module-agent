@@ -3,6 +3,38 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.1.0] - 2026-07-10
+
+### Added
+
+- **Frontend monitoring (RUM):** cache-safe storefront snippet injection via `view/frontend/layout/default.xml`.
+- Admin toggle: Stores → Config → MageWatch → Frontend monitoring (RUM).
+- Consumes `rum_public_key` and `rum_enabled` from SaaS remote config — no manual key setup.
+
+[1.1.0]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.1.0
+
+## [1.0.15] - 2026-07-10
+
+### Changed
+
+- Cron runs every minute (`*/1 * * * *`); paid plans send each run via remote `heartbeat_interval_minutes: 1`, free plans throttle to hourly.
+
+[1.0.15]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.15
+
+## [1.0.14] - 2026-07-10
+
+### Changed
+
+- Cron schedule aligned to Phase 1 spec: `*/5 * * * *` (every 5 minutes).
+- `magewatch:status` lists all registered collectors from `CollectorPool`, not a hardcoded subset.
+
+### Added
+
+- Unit tests for `QueueCollector`, `OrderStatsCollector`, `LogCollector`, and `SystemCollector`.
+- `docs/AGENT.md` — file tree and payload schema reference.
+
+[1.0.14]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.0.14
+
 ## [1.0.13] - 2026-07-09
 
 ### Added

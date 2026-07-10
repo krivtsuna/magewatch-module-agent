@@ -7,6 +7,7 @@
                 <endpoint_url><![CDATA[https://magewatch.io/api/v1/ingest]]></endpoint_url>
                 <site_token backend_model="Magento\Config\Model\Config\Backend\Encrypted"/>
                 <stuck_cron_threshold_minutes>30</stuck_cron_threshold_minutes>
+                <rum_enabled>1</rum_enabled>
             </agent>
             <collectors>
                 <indexer>1</indexer>

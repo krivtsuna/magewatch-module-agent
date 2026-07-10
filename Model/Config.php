@@ -19,6 +19,8 @@ class Config
 
     private const XML_PATH_COLLECTOR_PREFIX = 'magewatch/collectors/';
 
+    private const XML_PATH_RUM_ENABLED = 'magewatch/agent/rum_enabled';
+
     private const REMOTE_CONFIG_CACHE_KEY = 'magewatch_remote_config';
 
     private const DEFAULT_STUCK_CRON_THRESHOLD_MINUTES = 30;
@@ -94,6 +96,25 @@ class Config
             self::XML_PATH_COLLECTOR_PREFIX . $collectorCode,
             ScopeConfigInterface::SCOPE_TYPE_DEFAULT
         );
+    }
+
+    public function isRumEnabled(): bool
+    {
+        if (!$this->scopeConfig->isSetFlag(self::XML_PATH_RUM_ENABLED, ScopeConfigInterface::SCOPE_TYPE_DEFAULT)) {
+            return false;
+        }
+
+        $remote = $this->getRemoteConfig();
+
+        return (bool) ($remote['rum_enabled'] ?? false);
+    }
+
+    public function getRumPublicKey(): ?string
+    {
+        $remote = $this->getRemoteConfig();
+        $key = $remote['rum_public_key'] ?? null;
+
+        return is_string($key) && $key !== '' ? $key : null;
     }
 
     /**

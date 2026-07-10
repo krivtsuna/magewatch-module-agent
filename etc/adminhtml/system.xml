@@ -38,6 +38,14 @@
                         <field id="enabled">1</field>
                     </depends>
                 </field>
+                <field id="rum_enabled" translate="label comment" type="select" sortOrder="45" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Frontend monitoring (RUM)</label>
+                    <comment>Injects a tiny script on storefront pages to report JS errors, funnel activity counters, and Web Vitals. No cookies, no PII, no session IDs. Requires a paid MageWatch plan. Disable here to stop injection without uninstalling the agent.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
                 <field id="test_ping" translate="label comment" type="button" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Test Connection</label>
                     <comment>Builds a live payload and sends it to the configured endpoint immediately.</comment>

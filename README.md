@@ -1,109 +1,58 @@
 # MageWatch Agent for Magento 2
 
-Read-only monitoring agent for **Magento 2.4.6+**. Collects indexers, cron, queues, orders, logs, and system metrics every 5 minutes and POSTs a JSON heartbeat to [MageWatch](https://magewatch.io).
+Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). Every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes a JSON heartbeat to [MageWatch](https://magewatch.io) over HTTPS.
 
-- Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/module-agent)
-- Source: [github.com/krivtsuna/magewatch-module-agent](https://github.com/krivtsuna/magewatch-module-agent)
+Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/module-agent)
 
-## Requirements
+## What it is
 
-- Magento 2.4.6+ (Open Source or Adobe Commerce)
-- PHP 8.1, 8.2, or 8.3
+The MageWatch agent runs inside your Magento store. It does not modify catalog, sales, or customer data. It reports operational signals so your agency dashboard can alert you when indexers stall, crons miss runs, queues back up, orders drop unexpectedly, or logs spike — before your client notices.
 
-## Installation
+## What it does NOT do
 
-### From Packagist (recommended)
+- **Never writes** to catalog, sales, or customer tables — collectors are read-only.
+- **No customer PII** — order data is hourly aggregates only (counts and revenue buckets), not individual orders or buyer details.
+- **No remote code execution** — the agent only pushes JSON over HTTPS to your MageWatch ingest endpoint. There is no inbound control channel.
+- **Open source** — every collector is plain PHP under `Model/Collector/`. Inspect the code before you install on production.
+
+## Install
 
 From your Magento project root:
 
 ```bash
 composer require magewatch/module-agent
-bin/magento module:enable MageWatch_Agent
 bin/magento setup:upgrade
-bin/magento setup:di:compile
-bin/magento cache:flush
 ```
 
-### Before Packagist indexes the repo (or for private mirrors)
+Then in Magento admin: **Stores → Configuration → MageWatch → Agent** — paste the site token from your MageWatch dashboard and set the ingest URL (production: `https://magewatch.io/api/v1/ingest`).
 
-Add the GitHub VCS repository to your Magento `composer.json`, then require the package:
+Full step-by-step guide: [magewatch.io/docs/install](https://magewatch.io/docs/install)
 
-```json
-{
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/krivtsuna/magewatch-module-agent"
-        }
-    ]
-}
-```
+Architecture and payload schema: [docs/AGENT.md](docs/AGENT.md) (maintainers).
+
+## Requirements
+
+- Magento **2.4.x** (tested on 2.4.6+)
+- PHP **8.1**, **8.2**, or **8.3**
+- Outbound **HTTPS** to your MageWatch API host (e.g. `api.magewatch.io` or your self-hosted ingest URL)
+- Magento cron running (agent uses the `magewatch` cron group)
+
+## Useful commands
 
 ```bash
-composer require magewatch/module-agent:^1.0
-bin/magento module:enable MageWatch_Agent
-bin/magento setup:upgrade
-bin/magento cache:flush
-```
-
-### Local monorepo development (path repository)
-
-```json
-{
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../magewatch.io/packages/magewatch-module-agent",
-            "options": { "symlink": true }
-        }
-    ],
-    "require": {
-        "magewatch/module-agent": "@dev"
-    }
-}
-```
-
-## Configuration
-
-**Stores → Configuration → MageWatch → Agent**
-
-| Field | Description |
-|---|---|
-| Enabled | Turns the cron job on/off |
-| API Endpoint URL | HTTPS ingest URL, e.g. `https://magewatch.io/api/v1/ingest` |
-| Site Token | Bearer token from the MageWatch dashboard |
-| Stuck Cron Threshold | Minutes before a running job is reported as stuck (default 30) |
-
-## CLI
-
-```bash
-bin/magento magewatch:status
-bin/magento magewatch:send
+bin/magento magewatch:status    # last run, enabled collectors, ingest URL
+bin/magento magewatch:send      # send heartbeat now (respects schedule)
 bin/magento magewatch:send --force
 ```
 
-## How it works
+## Frontend monitoring (RUM)
 
-- Cron group `magewatch` runs `CollectAndSend` on a configurable schedule (default `*/5 * * * *`).
-- Collectors implement `CollectorInterface`; failures are logged and listed in `collector_errors` without breaking the run.
-- Delivery uses Magento's Curl client (TLS verification on, 5s connect / 10s total timeout).
-- Log line deltas use the `magewatch_log_offset` DB table (multi-node safe).
-- On first install, log reading starts at the last ~7 days (not byte zero of multi-GB files). Each heartbeat then reads only new appended lines (up to 5 MB per run until caught up).
+From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch plans) that reports JS errors, funnel activity counters, and Web Vitals to MageWatch. The script loads from `https://magewatch.io/rum/v1.js` — logic lives on the SaaS so fixes do not require module releases.
 
-## Tests
-
-Unit tests run inside a Magento dev environment:
-
-```bash
-vendor/bin/phpunit -c dev/tests/unit/phpunit.xml.dist app/code/MageWatch/Agent/Test/Unit
-```
-
-In this standalone repo (requires Magento packages in `vendor/`):
-
-```bash
-composer install
-vendor/bin/phpunit
-```
+- **Toggle:** Stores → Configuration → MageWatch → Agent → Frontend monitoring (RUM) (default ON).
+- **Keys:** `rum_public_key` is synced automatically via remote config — never paste it manually.
+- **What it collects:** sanitized JS error messages, add-to-cart/checkout/success counters, LCP/CLS/INP — no cookies, no PII, no session IDs.
+- **Disable:** set Frontend monitoring to No — removes injection without uninstalling the agent.
 
 ## Uninstall
 
@@ -112,6 +61,12 @@ bin/magento module:disable MageWatch_Agent
 composer remove magewatch/module-agent
 bin/magento setup:upgrade
 ```
+
+## Data & privacy
+
+What the agent collects, how long MageWatch retains it, and DPA terms for agencies:
+
+[magewatch.io/data](https://magewatch.io/data)
 
 ## License
 
