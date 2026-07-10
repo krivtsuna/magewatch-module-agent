@@ -3,6 +3,28 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.5] - 2026-07-10
+
+### Added
+
+- **Split heartbeat:** `magewatch_heartbeat_ping` (`*/1`) sends a minimal payload for paid minute-level visibility; `magewatch_collect_and_send` (`*/5`) runs full collectors.
+- **`HeartbeatDelivery`:** shared delivery service with separate ping/full throttle caches (free plan stays hourly).
+
+### Fixed
+
+- Paid stores get minute `last_seen` updates without running heavy collectors every minute — survives busy `cron_schedule` queues better than a single `*/1` full job.
+
+[1.2.5]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.5
+
+## [1.2.4] - 2026-07-10
+
+### Fixed
+
+- **Cron reliability:** revert schedule to `*/5 * * * *` (was `*/1`) — reduces `cron_schedule` pressure and missed-job churn on busy stores.
+- **Isolation:** `magewatch` cron group runs in a separate PHP process (`use_separate_process=1`) so default-group backlog does not block heartbeats.
+
+[1.2.4]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.4
+
 ## [1.2.3] - 2026-07-10
 
 ### Fixed

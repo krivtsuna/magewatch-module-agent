@@ -1,6 +1,6 @@
 # MageWatch Agent — architecture reference
 
-Phase 1 MVP module (`MageWatch_Agent`, Composer package `magewatch/module-agent`). Read-only collectors run in the `magewatch` cron group every 5 minutes, assemble one JSON payload, and POST it to the MageWatch ingest API.
+Phase 1 MVP module (`MageWatch_Agent`, Composer package `magewatch/module-agent`). Read-only collectors run in the `magewatch` cron group: a **lightweight ping every minute** updates SaaS `last_seen`, and a **full collection every five minutes** assembles the JSON payload posted to the MageWatch ingest API.
 
 ## File tree
 
@@ -10,7 +10,8 @@ packages/magewatch-module-agent/
 ├── Block/Adminhtml/System/Config/      # Test ping button block
 ├── Console/Command/                    # magewatch:status, magewatch:send
 ├── Controller/Adminhtml/Config/        # Test ping AJAX endpoint
-├── Cron/CollectAndSend.php             # Main cron job (fail-safe)
+├── Cron/CollectAndSend.php             # Full collection cron job (fail-safe)
+├── Cron/HeartbeatPing.php              # Lightweight minute ping (fail-safe)
 ├── Logger/                             # var/log/magewatch.log
 ├── Model/
 │   ├── Collector/                      # One class per metric domain
@@ -21,7 +22,7 @@ packages/magewatch-module-agent/
 │   └── LogOffset/                      # DB-backed log file offsets
 ├── Test/Unit/                          # PHPUnit (mocked ResourceConnection)
 ├── etc/
-│   ├── crontab.xml                     # magewatch group, */5 schedule
+│   ├── crontab.xml                     # magewatch group: ping */1 + full */5
 │   ├── cron_groups.xml
 │   ├── config.xml                      # Defaults
 │   ├── adminhtml/system.xml            # Admin UI fields

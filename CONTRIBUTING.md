@@ -62,7 +62,8 @@ bin/magento cache:flush
 
 ## How it works
 
-- Cron group `magewatch` runs `CollectAndSend` every minute (`*/1 * * * *`). Delivery frequency is controlled remotely: paid plans `heartbeat_interval_minutes: 1`, free plans `60`.
+- Cron group `magewatch` runs `HeartbeatPing` every minute (`*/1`) and `CollectAndSend` every five minutes (`*/5`) in a **separate PHP process**. Paid plans: minute ping + 5‑minute full metrics (`heartbeat_interval_minutes: 1` from SaaS). Free: both throttled to hourly.
+- Requires the same system cron Magento already needs: `* * * * * php bin/magento cron:run` — no extra crontab lines for MageWatch.
 - Collectors implement `CollectorInterface`; failures are logged and listed in `collector_errors` without breaking the run.
 - Delivery uses Magento's Curl client (TLS verification on, 5s connect / 10s total timeout).
 - Log line deltas use the `magewatch_log_offset` DB table (multi-node safe).

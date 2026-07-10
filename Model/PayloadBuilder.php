@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.3';
+    public const AGENT_VERSION = '1.2.5';
 
     public function __construct(
         private readonly Config $config,
@@ -73,6 +73,20 @@ class PayloadBuilder
             'agent_version' => self::AGENT_VERSION,
             'collected_at' => $this->clock->now()->format(DATE_ATOM),
             'test_ping' => true,
+        ];
+    }
+
+    /**
+     * Minimal payload for the once-per-minute cron ping job.
+     *
+     * @return array<string, mixed>
+     */
+    public function buildHeartbeatPing(): array
+    {
+        return [
+            'agent_version' => self::AGENT_VERSION,
+            'collected_at' => $this->clock->now()->format(DATE_ATOM),
+            'heartbeat_ping' => true,
         ];
     }
 }

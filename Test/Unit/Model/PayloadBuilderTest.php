@@ -41,7 +41,7 @@ class PayloadBuilderTest extends TestCase
 
         $payload = $builder->build();
 
-        $this->assertSame('1.1.0', $payload['agent_version']);
+        $this->assertSame(PayloadBuilder::AGENT_VERSION, $payload['agent_version']);
         $this->assertArrayNotHasKey('site_token', $payload);
         $this->assertSame('2026-07-03T10:05:00+00:00', $payload['collected_at']);
         $this->assertSame([['id' => 'catalog_product_price']], $payload['indexers']);
@@ -94,6 +94,19 @@ class PayloadBuilderTest extends TestCase
         $this->assertCount(1, $payload['collector_errors']);
         $this->assertStringContainsString('order_stats', $payload['collector_errors'][0]);
         $this->assertStringContainsString('DB unavailable', $payload['collector_errors'][0]);
+    }
+
+    public function testBuildHeartbeatPingIsMinimal(): void
+    {
+        $pool = new CollectorPool([]);
+        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger);
+
+        $payload = $builder->buildHeartbeatPing();
+
+        $this->assertTrue($payload['heartbeat_ping']);
+        $this->assertSame(PayloadBuilder::AGENT_VERSION, $payload['agent_version']);
+        $this->assertArrayNotHasKey('indexers', $payload);
+        $this->assertArrayNotHasKey('cron', $payload);
     }
 
     /**

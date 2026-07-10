@@ -1,6 +1,6 @@
 # MageWatch Agent for Magento 2
 
-Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). Every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes a JSON heartbeat to [MageWatch](https://magewatch.io) over HTTPS.
+Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). A lightweight heartbeat runs every minute (paid) to confirm the store is alive; every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes JSON to [MageWatch](https://magewatch.io) over HTTPS.
 
 Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/module-agent)
 

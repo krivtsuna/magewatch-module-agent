@@ -9,9 +9,9 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Full metric collection — runs every five minutes in the magewatch cron group.
+ * Lightweight minute heartbeat — updates SaaS last_seen without running collectors.
  */
-class CollectAndSend
+class HeartbeatPing
 {
     public function __construct(
         private readonly HeartbeatDelivery $heartbeatDelivery,
@@ -22,9 +22,9 @@ class CollectAndSend
     public function execute(): void
     {
         try {
-            $this->heartbeatDelivery->sendFull();
+            $this->heartbeatDelivery->sendPing();
         } catch (Throwable $e) {
-            $this->logger->error(sprintf('MageWatch full collection failed: %s', $e->getMessage()));
+            $this->logger->error(sprintf('MageWatch heartbeat ping failed: %s', $e->getMessage()));
         }
     }
 }

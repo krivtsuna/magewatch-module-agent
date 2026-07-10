@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="magewatch">
-        <job name="magewatch_collect_and_send" instance="MageWatch\Agent\Cron\CollectAndSend" method="execute">
+        <job name="magewatch_heartbeat_ping" instance="MageWatch\Agent\Cron\HeartbeatPing" method="execute">
             <schedule>*/1 * * * *</schedule>
+        </job>
+        <job name="magewatch_collect_and_send" instance="MageWatch\Agent\Cron\CollectAndSend" method="execute">
+            <schedule>*/5 * * * *</schedule>
         </job>
     </group>
 </config>
