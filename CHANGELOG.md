@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.1] - 2026-07-10
+
+### Fixed
+
+- **Security collector:** instantiate `PubPhpIntegrityChecker` directly — fixes `Too few arguments to function SecurityCollector::__construct()` on stores with compiled DI from 1.2.0.
+
+[1.2.1]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.1
+
 ## [1.2.0] - 2026-07-10
 
 ### Fixed

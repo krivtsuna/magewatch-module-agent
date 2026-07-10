@@ -42,7 +42,6 @@ class SecurityCollector implements CollectorInterface
         private readonly Filesystem $filesystem,
         private readonly ResourceConnection $resourceConnection,
         private readonly Clock $clock,
-        private readonly PubPhpIntegrityChecker $pubPhpIntegrityChecker,
     ) {
     }
 
@@ -62,7 +61,7 @@ class SecurityCollector implements CollectorInterface
             DIRECTORY_SEPARATOR
         ).DIRECTORY_SEPARATOR;
 
-        $pubIntegrity = $this->pubPhpIntegrityChecker->scan($pubPath, $rootPath);
+        $pubIntegrity = (new PubPhpIntegrityChecker())->scan($pubPath, $rootPath);
 
         return [
             'security' => [
