@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.7';
+    public const AGENT_VERSION = '1.2.8';
 
     public function __construct(
         private readonly Config $config,

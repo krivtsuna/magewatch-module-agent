@@ -13,7 +13,7 @@ use Magento\Framework\DB\Sql\Expression;
 
 /**
  * Reports cron health: stuck jobs, missed/error counts in the last hour,
- * schedule table bloat, and dead-cron detection via last successful run.
+ * schedule table bloat, dead-cron detection, and per-group aggregates.
  */
 class CronCollector implements CollectorInterface
 {
@@ -42,13 +42,19 @@ class CronCollector implements CollectorInterface
         $table = $this->resourceConnection->getTableName('cron_schedule');
         $now = $this->clock->now();
 
+        $stuck = $this->getStuckJobs($connection, $table, $now);
+        $missed = $this->getStatusCountsByJob($connection, $table, self::STATUS_MISSED, $now);
+        $errors = $this->getStatusCountsByJob($connection, $table, self::STATUS_ERROR, $now);
+        $groups = $this->buildGroupStats($connection, $table, $now, $stuck, $missed, $errors);
+
         return [
             'cron' => [
-                'stuck' => $this->getStuckJobs($connection, $table, $now),
-                'missed_last_hour' => $this->getStatusCountsByJob($connection, $table, self::STATUS_MISSED, $now),
-                'errors_last_hour' => $this->getStatusCountsByJob($connection, $table, self::STATUS_ERROR, $now),
+                'stuck' => $stuck,
+                'missed_last_hour' => $missed,
+                'errors_last_hour' => $errors,
                 'schedule_rows' => $this->getScheduleRowCount($connection, $table),
                 'last_success_at' => $this->getLastSuccessAt($connection, $table),
+                'groups' => $groups,
             ],
         ];
     }
@@ -104,6 +110,106 @@ class CronCollector implements CollectorInterface
         }
 
         return $result;
+    }
+
+    /**
+     * @param  array<int, array{job_code: string, executed_at: string}>  $stuck
+     * @param  array<int, array{job_code: string, count: int}>  $missed
+     * @param  array<int, array{job_code: string, count: int}>  $errors
+     * @return array<int, array{group: string, last_success_at: ?string, missed_last_hour: int, errors_last_hour: int, stuck: int}>
+     */
+    private function buildGroupStats(
+        AdapterInterface $connection,
+        string $table,
+        \DateTimeImmutable $now,
+        array $stuck,
+        array $missed,
+        array $errors
+    ): array {
+        $groups = [];
+
+        foreach ($this->discoverGroups($connection, $table) as $group) {
+            $groups[$group] = [
+                'group' => $group,
+                'last_success_at' => $this->getLastSuccessAtForGroup($connection, $table, $group),
+                'missed_last_hour' => 0,
+                'errors_last_hour' => 0,
+                'stuck' => 0,
+            ];
+        }
+
+        foreach ($missed as $row) {
+            $group = $this->resolveGroup((string) $row['job_code']);
+            $groups[$group]['missed_last_hour'] += (int) $row['count'];
+        }
+
+        foreach ($errors as $row) {
+            $group = $this->resolveGroup((string) $row['job_code']);
+            $groups[$group]['errors_last_hour'] += (int) $row['count'];
+        }
+
+        foreach ($stuck as $row) {
+            $group = $this->resolveGroup((string) $row['job_code']);
+            $groups[$group]['stuck']++;
+        }
+
+        return array_values($groups);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function discoverGroups(AdapterInterface $connection, string $table): array
+    {
+        $select = $connection->select()
+            ->from($table, ['job_code'])
+            ->distinct(true)
+            ->limit(500);
+
+        $groups = ['default', 'index', 'magewatch'];
+        foreach ($connection->fetchCol($select) as $jobCode) {
+            $groups[] = $this->resolveGroup((string) $jobCode);
+        }
+
+        return array_values(array_unique($groups));
+    }
+
+    private function resolveGroup(string $jobCode): string
+    {
+        $jobCode = strtolower(trim($jobCode));
+
+        if ($jobCode === '' || str_starts_with($jobCode, 'magewatch_')) {
+            return 'magewatch';
+        }
+
+        if (
+            str_contains($jobCode, 'indexer')
+            || str_starts_with($jobCode, 'catalog_product_')
+            || str_starts_with($jobCode, 'catalogsearch_')
+            || str_starts_with($jobCode, 'inventory_')
+        ) {
+            return 'index';
+        }
+
+        return 'default';
+    }
+
+    private function getLastSuccessAtForGroup(AdapterInterface $connection, string $table, string $group): ?string
+    {
+        $select = $connection->select()
+            ->from($table, ['job_code', 'finished_at'])
+            ->where('status = ?', self::STATUS_SUCCESS)
+            ->where('finished_at IS NOT NULL')
+            ->order('finished_at DESC')
+            ->limit(2000);
+
+        foreach ($connection->fetchAll($select) as $row) {
+            if ($this->resolveGroup((string) $row['job_code']) === $group) {
+                return $this->formatDate((string) $row['finished_at']);
+            }
+        }
+
+        return null;
     }
 
     private function getScheduleRowCount(AdapterInterface $connection, string $table): int

@@ -7,11 +7,13 @@ namespace MageWatch\Agent\Model\Collector;
 use MageWatch\Agent\Api\CollectorInterface;
 use Magento\Framework\App\Cache\StateInterface as CacheStateInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\MaintenanceMode;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\App\State;
 use Magento\Framework\Filesystem;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
@@ -29,7 +31,8 @@ class SystemCollector implements CollectorInterface
         private readonly MaintenanceMode $maintenanceMode,
         private readonly TypeListInterface $cacheTypeList,
         private readonly CacheStateInterface $cacheState,
-        private readonly StoreManagerInterface $storeManager
+        private readonly StoreManagerInterface $storeManager,
+        private readonly ScopeConfigInterface $scopeConfig,
     ) {
     }
 
@@ -50,6 +53,8 @@ class SystemCollector implements CollectorInterface
                 'store_base_urls' => $this->getStoreBaseUrls(),
                 'static_version' => $this->readStaticContentVersion(),
                 'composer_lock_hash' => $this->readComposerLockHash(),
+                'base_currency_code' => $this->getBaseCurrencyCode(),
+                'timezone' => $this->getStoreTimezone(),
             ],
             'system' => $this->getDiskStats() + $this->getInodeStats() + ['disabled_caches' => $this->getDisabledCaches()],
         ];
@@ -173,6 +178,26 @@ class SystemCollector implements CollectorInterface
         }
 
         return null;
+    }
+
+    private function getBaseCurrencyCode(): ?string
+    {
+        $code = (string) $this->scopeConfig->getValue(
+            'currency/options/base',
+            ScopeInterface::SCOPE_STORE
+        );
+
+        return $code !== '' ? strtoupper($code) : null;
+    }
+
+    private function getStoreTimezone(): ?string
+    {
+        $timezone = (string) $this->scopeConfig->getValue(
+            'general/locale/timezone',
+            ScopeInterface::SCOPE_STORE
+        );
+
+        return $timezone !== '' ? $timezone : null;
     }
 
     private function readComposerLockHash(): ?string

@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.8] - 2026-07-13
+
+### Added
+
+- **Store locale:** `magento.base_currency_code` and `magento.timezone` from store config in heartbeats.
+- **Cron groups:** `cron.groups[]` with per-group last success, missed 1h, errors, and stuck counts.
+
+[1.2.8]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.8
+
 ## [1.2.7] - 2026-07-13
 
 ### Fixed
