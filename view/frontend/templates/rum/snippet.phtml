@@ -3,5 +3,4 @@
 }
 $script = $block->escapeUrl($block->getScriptUrl());
 ?>
-<?= /* @noEscape */ $block->getConfigScriptHtml() ?>
-<script src="<?= /* @noEscape */ $script ?>" async></script>
+<script src="<?= /* @noEscape */ $script ?>" defer></script>

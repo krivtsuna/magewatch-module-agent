@@ -3,6 +3,17 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.10] - 2026-07-13
+
+### Fixed
+
+- **RUM on strict CSP checkout:** no inline `window.__mwRum`; pass site-wide `k/u` as query params on the external script URL.
+- **FPC-safe snippet:** block stays `cacheable="true"` — page type is detected client-side in SaaS `v1.js` (URL + body class), so output is identical on every page.
+- **RUM loader race:** `defer` instead of `async`; SaaS `v1.js` retries until `k` is readable.
+- **Checkout layout:** explicit `checkout_*` layout handles so the snippet is present on cart/checkout/success.
+
+[1.2.10]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.10
+
 ## [1.2.9] - 2026-07-13
 
 ### Fixed
