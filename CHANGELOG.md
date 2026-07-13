@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.7] - 2026-07-13
+
+### Fixed
+
+- **RUM checkout funnel:** detect checkout/success from URL path when layout handles are generic (Hyvä, Amasty, CMS-wrapped checkout).
+- **Checkout probe:** treat empty-cart redirect (`/checkout` → `/checkout/cart`) as healthy instead of a storefront outage.
+
+[1.2.7]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.7
+
 ## [1.2.6] - 2026-07-13
 
 ### Fixed

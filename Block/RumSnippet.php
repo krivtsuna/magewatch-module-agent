@@ -41,9 +41,12 @@ class RumSnippet extends Template
     {
         $handles = $this->getLayout()->getUpdate()->getHandles();
 
-        return match (true) {
+        $fromHandles = match (true) {
             in_array('checkout_onepage_success', $handles, true) => 'success',
-            in_array('checkout_index_index', $handles, true) => 'checkout',
+            in_array('checkout_index_index', $handles, true),
+            in_array('hyva_checkout_index_index', $handles, true),
+            in_array('onepagecheckout_index_index', $handles, true),
+            in_array('firecheckout_index_index', $handles, true) => 'checkout',
             in_array('checkout_cart_index', $handles, true) => 'cart',
             in_array('catalog_product_view', $handles, true) => 'product',
             in_array('catalog_category_view', $handles, true) => 'category',
@@ -51,6 +54,26 @@ class RumSnippet extends Template
             in_array('cms_index_index', $handles, true) => 'cms',
             default => 'other',
         };
+
+        if ($fromHandles !== 'other') {
+            return $fromHandles;
+        }
+
+        $path = strtolower((string) parse_url((string) $this->getRequest()->getRequestUri(), PHP_URL_PATH));
+
+        if (preg_match('#/checkout/(?:onepage/)?success#', $path)) {
+            return 'success';
+        }
+
+        if (preg_match('#/checkout(?!/cart)(?:/|$)#', $path)) {
+            return 'checkout';
+        }
+
+        if (str_contains($path, '/checkout/cart')) {
+            return 'cart';
+        }
+
+        return $fromHandles;
     }
 
     public function getScriptUrl(): string

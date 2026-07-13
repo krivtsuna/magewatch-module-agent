@@ -174,12 +174,18 @@ class StorefrontProbeCollector implements CollectorInterface
 
         $body = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $effectiveUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         curl_close($ch);
 
         $ms = (int) round((microtime(true) - $start) * 1000);
         $bodySample = is_string($body) ? mb_substr($body, 0, self::BODY_READ_LIMIT) : null;
         $magentoError = $this->errorPageDetector->isErrorPage($bodySample);
         $ok = $status >= 200 && $status < 400 && ! $magentoError;
+
+        if (! $ok && str_contains($path, '/checkout') && $this->isEmptyCartCheckoutRedirect($status, $effectiveUrl, $magentoError)) {
+            $ok = true;
+            $magentoError = false;
+        }
 
         return [
             'ok' => $ok,
@@ -188,5 +194,20 @@ class StorefrontProbeCollector implements CollectorInterface
             'method' => $viaLocalhost ? 'origin' : 'direct',
             'magento_error' => $magentoError,
         ];
+    }
+
+    private function isEmptyCartCheckoutRedirect(int $status, string $effectiveUrl, bool $magentoError): bool
+    {
+        if ($magentoError) {
+            return false;
+        }
+
+        if (in_array($status, [301, 302, 303, 307, 308], true)) {
+            return true;
+        }
+
+        return $status >= 200
+            && $status < 400
+            && str_contains(strtolower($effectiveUrl), '/checkout/cart');
     }
 }
