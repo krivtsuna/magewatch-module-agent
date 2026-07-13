@@ -14,37 +14,29 @@ class InitialLogOffsetTest extends TestCase
         $this->assertSame(5_000_000, InitialLogOffset::resolve(5_000_000, 20_000_000, 1_700_000_000));
     }
 
-    public function test_starts_near_last_week_on_first_sight_of_old_large_file(): void
+    public function test_reads_only_tail_on_first_sight_of_large_file(): void
     {
-        $now = 1_700_000_000;
-        $mtime = $now - (365 * 86_400);
         $size = 100_000_000;
 
-        $offset = InitialLogOffset::resolve(0, $size, $mtime, $now);
+        $offset = InitialLogOffset::resolve(0, $size, time(), time());
 
-        $window = $size - $offset;
-        $this->assertGreaterThan(0, $offset);
-        $this->assertLessThan($size, $offset);
-        $this->assertLessThanOrEqual(InitialLogOffset::MAX_WINDOW_BYTES, $window);
+        $this->assertSame($size - InitialLogOffset::INITIAL_TAIL_BYTES, $offset);
     }
 
-    public function test_reads_entire_young_file_on_first_sight(): void
+    public function test_reads_entire_small_file_on_first_sight(): void
     {
-        $now = 1_700_000_000;
-        $mtime = $now - 86_400;
         $size = 50_000;
 
-        $this->assertSame(0, InitialLogOffset::resolve(0, $size, $mtime, $now));
+        $this->assertSame(0, InitialLogOffset::resolve(0, $size, time(), time()));
     }
 
-    public function test_caps_window_bytes_on_very_large_files(): void
+    public function test_ignores_recent_mtime_on_active_log(): void
     {
-        $now = 1_700_000_000;
-        $mtime = $now - (30 * 86_400);
-        $size = 500_000_000;
+        $now = time();
+        $size = 80_000_000;
 
-        $offset = InitialLogOffset::resolve(0, $size, $mtime, $now);
+        $offset = InitialLogOffset::resolve(0, $size, $now - 30, $now);
 
-        $this->assertSame($size - InitialLogOffset::MAX_WINDOW_BYTES, $offset);
+        $this->assertSame($size - InitialLogOffset::INITIAL_TAIL_BYTES, $offset);
     }
 }

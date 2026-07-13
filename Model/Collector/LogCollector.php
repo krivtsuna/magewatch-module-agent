@@ -18,7 +18,7 @@ use Magento\Framework\Filesystem\Directory\ReadInterface;
  *
  * Only the delta since the last recorded offset is read, so cost stays
  * flat regardless of historical log size. On first sight of a file (offset 0),
- * reading starts near the last ~7 days instead of byte zero. Log rotation
+ * reading starts at the last ~1 MiB tail instead of byte zero. Log rotation
  * (current size < stored offset) is detected and the bootstrap runs again.
  */
 class LogCollector implements CollectorInterface

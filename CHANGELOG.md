@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.6] - 2026-07-13
+
+### Fixed
+
+- **Log bootstrap:** on first agent run, read only the last ~1 MiB of each log file (not the whole file). Active logs with a recent `mtime` no longer dump tens of thousands of historical exception lines into the first heartbeat.
+
+[1.2.6]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.6
+
 ## [1.2.5] - 2026-07-10
 
 ### Added
