@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.9] - 2026-07-13
+
+### Fixed
+
+- **RUM snippet FPC:** `cacheable="false"` so `window.__mwRum.p` is not shared across cached pages.
+- **RUM script cache bust:** load `/rum/v1.js?v=2` after SaaS funnel fixes ship.
+
+[1.2.9]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.9
+
 ## [1.2.8] - 2026-07-13
 
 ### Added

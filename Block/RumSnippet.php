@@ -14,6 +14,9 @@ use Magento\Framework\View\Helper\SecureHtmlRenderer;
  */
 class RumSnippet extends Template
 {
+    /** Bust CDN/browser caches when the SaaS-hosted RUM script changes. */
+    private const RUM_SCRIPT_VERSION = '2';
+
     public function __construct(
         Context $context,
         private readonly Config $config,
@@ -81,7 +84,7 @@ class RumSnippet extends Template
         $endpoint = $this->config->getEndpointUrl() ?? 'https://magewatch.io/api/v1/ingest';
         $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://magewatch.io';
 
-        return rtrim($base, '/') . '/rum/v1.js';
+        return rtrim($base, '/') . '/rum/v1.js?v=' . self::RUM_SCRIPT_VERSION;
     }
 
     public function getIngestBaseUrl(): string
