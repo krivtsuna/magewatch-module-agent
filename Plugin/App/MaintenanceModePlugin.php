@@ -10,8 +10,9 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Push a heartbeat to MageWatch immediately when maintenance mode toggles —
- * do not wait for the next minute cron.
+ * Push a heartbeat to MageWatch immediately when maintenance mode toggles.
+ *
+ * Magento 2.4+ CLI uses MaintenanceMode::set() — not enable()/disable().
  */
 class MaintenanceModePlugin
 {
@@ -25,20 +26,9 @@ class MaintenanceModePlugin
      * @param  mixed  $result
      * @return mixed
      */
-    public function afterEnable(MaintenanceMode $subject, $result = null)
+    public function afterSet(MaintenanceMode $subject, $result, bool $isOn)
     {
-        $this->notify(true);
-
-        return $result;
-    }
-
-    /**
-     * @param  mixed  $result
-     * @return mixed
-     */
-    public function afterDisable(MaintenanceMode $subject, $result = null)
-    {
-        $this->notify(false);
+        $this->notify($isOn);
 
         return $result;
     }

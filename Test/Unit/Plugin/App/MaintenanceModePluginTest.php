@@ -26,7 +26,7 @@ class MaintenanceModePluginTest extends TestCase
         $this->plugin = new MaintenanceModePlugin($this->heartbeatDelivery, $this->logger);
     }
 
-    public function test_after_enable_sends_maintenance_on_ping(): void
+    public function test_after_set_true_sends_maintenance_on_ping(): void
     {
         $subject = $this->createMock(MaintenanceMode::class);
 
@@ -35,10 +35,10 @@ class MaintenanceModePluginTest extends TestCase
             ->method('sendMaintenanceStatePing')
             ->with(true);
 
-        $this->assertSame('ok', $this->plugin->afterEnable($subject, 'ok'));
+        $this->assertTrue($this->plugin->afterSet($subject, true, true));
     }
 
-    public function test_after_disable_sends_maintenance_off_ping(): void
+    public function test_after_set_false_sends_maintenance_off_ping(): void
     {
         $subject = $this->createMock(MaintenanceMode::class);
 
@@ -47,6 +47,6 @@ class MaintenanceModePluginTest extends TestCase
             ->method('sendMaintenanceStatePing')
             ->with(false);
 
-        $this->assertNull($this->plugin->afterDisable($subject, null));
+        $this->assertTrue($this->plugin->afterSet($subject, true, false));
     }
 }

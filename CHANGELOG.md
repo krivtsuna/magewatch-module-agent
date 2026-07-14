@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.13] - 2026-07-14
+
+### Fixed
+
+- **Instant maintenance ping on Magento 2.4+:** hook `MaintenanceMode::set()` instead of removed `enable()`/`disable()` methods — `bin/magento maintenance:enable|disable` now notifies MageWatch immediately.
+
+[1.2.13]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.13
+
 ## [1.2.12] - 2026-07-14
 
 ### Added
