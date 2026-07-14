@@ -56,7 +56,7 @@ bin/magento cache:flush
 | Field | Description |
 |---|---|
 | Enabled | Turns the cron job on/off |
-| API Endpoint URL | HTTPS ingest URL, e.g. `https://magewatch.io/api/v1/ingest` |
+| API Endpoint URL | HTTPS ingest URL, e.g. `https://ingest.magewatch.io/api/v1/ingest` |
 | Site Token | Bearer token from the MageWatch dashboard |
 | Stuck Cron Threshold | Minutes before a running job is reported as stuck (default 30) |
 

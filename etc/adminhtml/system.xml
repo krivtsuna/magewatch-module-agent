@@ -17,7 +17,7 @@
                 </field>
                 <field id="endpoint_url" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Endpoint URL</label>
-                    <comment>Ingest URL for heartbeats. Production default: https://magewatch.io/api/v1/ingest. Change only for self-hosted MageWatch (see MageWatch install docs for Docker).</comment>
+                    <comment>Ingest URL for heartbeats. Production default: https://ingest.magewatch.io/api/v1/ingest (DNS-only subdomain; bypasses Cloudflare bot challenges). Change only for self-hosted MageWatch (see install docs for Docker).</comment>
                     <depends>
                         <field id="enabled">1</field>
                     </depends>

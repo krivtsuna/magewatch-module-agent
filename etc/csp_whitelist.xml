@@ -5,11 +5,13 @@
         <policy id="script-src">
             <values>
                 <value id="magewatch-rum-script" type="host">https://magewatch.io</value>
+                <value id="magewatch-rum-script-ingest" type="host">https://ingest.magewatch.io</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
                 <value id="magewatch-rum-ingest" type="host">https://magewatch.io</value>
+                <value id="magewatch-rum-ingest-direct" type="host">https://ingest.magewatch.io</value>
             </values>
         </policy>
     </policies>

@@ -24,7 +24,7 @@ composer require magewatch/module-agent
 bin/magento setup:upgrade
 ```
 
-Then in Magento admin: **Stores → Configuration → MageWatch → Agent** — paste the site token from your MageWatch dashboard and set the ingest URL (production: `https://magewatch.io/api/v1/ingest`).
+Then in Magento admin: **Stores → Configuration → MageWatch → Agent** — paste the site token from your MageWatch dashboard and set the ingest URL (production: `https://ingest.magewatch.io/api/v1/ingest`).
 
 Full step-by-step guide: [magewatch.io/docs/install](https://magewatch.io/docs/install)
 
@@ -47,7 +47,7 @@ bin/magento magewatch:send --force
 
 ## Frontend monitoring (RUM)
 
-From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch plans) that reports JS errors, funnel activity counters, and Web Vitals to MageWatch. The script loads from `https://magewatch.io/rum/v1.js` — logic lives on the SaaS so fixes do not require module releases.
+From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch plans) that reports JS errors, funnel activity counters, and Web Vitals to MageWatch. The script loads from the same host as your ingest URL (production: `https://ingest.magewatch.io/rum/v1.js`) — logic lives on the SaaS so fixes do not require module releases.
 
 - **Toggle:** Stores → Configuration → MageWatch → Agent → Frontend monitoring (RUM) (default ON).
 - **Keys:** `rum_public_key` is synced automatically via remote config — never paste it manually.

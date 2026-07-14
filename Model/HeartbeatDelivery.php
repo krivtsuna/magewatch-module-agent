@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Model;
 
 use MageWatch\Agent\Model\Transport\HttpClient;
+use Magento\Framework\App\MaintenanceMode;
 use Magento\Framework\App\CacheInterface;
 use Psr\Log\LoggerInterface;
 
@@ -17,12 +18,15 @@ class HeartbeatDelivery
 
     private const LAST_FULL_CACHE_KEY = 'magewatch_last_full_at';
 
+    private const LAST_MAINTENANCE_CACHE_KEY = 'magewatch_last_maintenance_state';
+
     public function __construct(
         private readonly Config $config,
         private readonly PayloadBuilder $payloadBuilder,
         private readonly HttpClient $httpClient,
         private readonly RemoteConfigSync $remoteConfigSync,
         private readonly CacheInterface $cache,
+        private readonly MaintenanceMode $maintenanceMode,
         private readonly LoggerInterface $logger
     ) {
     }
@@ -33,15 +37,26 @@ class HeartbeatDelivery
             return;
         }
 
+        $maintenanceOn = $this->maintenanceMode->isOn();
+        $stateChanged = $this->maintenanceStateChanged($maintenanceOn);
+        $pingPayload = array_merge(
+            $this->payloadBuilder->buildHeartbeatPing(),
+            ['maintenance_mode' => $maintenanceOn]
+        );
+
+        if ($stateChanged) {
+            $this->deliver($pingPayload, self::LAST_PING_CACHE_KEY, 'ping-maintenance-change');
+            $this->rememberMaintenanceState($maintenanceOn);
+
+            return;
+        }
+
         if ($this->isThrottled(self::LAST_PING_CACHE_KEY, $this->config->getHeartbeatIntervalMinutes())) {
             return;
         }
 
-        $this->deliver(
-            $this->payloadBuilder->buildHeartbeatPing(),
-            self::LAST_PING_CACHE_KEY,
-            'ping'
-        );
+        $this->deliver($pingPayload, self::LAST_PING_CACHE_KEY, 'ping');
+        $this->rememberMaintenanceState($maintenanceOn);
     }
 
     public function sendFull(): void
@@ -60,6 +75,7 @@ class HeartbeatDelivery
             self::LAST_FULL_CACHE_KEY,
             'full'
         );
+        $this->rememberMaintenanceState($this->maintenanceMode->isOn());
     }
 
     private function prepareDelivery(): bool
@@ -100,6 +116,21 @@ class HeartbeatDelivery
         }
 
         return (time() - (int) $lastDelivery) < ($intervalMinutes * 60);
+    }
+
+    private function maintenanceStateChanged(bool $maintenanceOn): bool
+    {
+        $lastState = $this->cache->load(self::LAST_MAINTENANCE_CACHE_KEY);
+        if ($lastState === false) {
+            return false;
+        }
+
+        return ((string) $lastState === '1') !== $maintenanceOn;
+    }
+
+    private function rememberMaintenanceState(bool $maintenanceOn): void
+    {
+        $this->cache->save($maintenanceOn ? '1' : '0', self::LAST_MAINTENANCE_CACHE_KEY, [], 86400);
     }
 
     /**

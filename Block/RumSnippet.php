@@ -43,8 +43,8 @@ class RumSnippet extends Template
 
     public function getScriptUrl(): string
     {
-        $endpoint = $this->config->getEndpointUrl() ?? 'https://magewatch.io/api/v1/ingest';
-        $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://magewatch.io';
+        $endpoint = $this->config->getEndpointUrl() ?? 'https://ingest.magewatch.io/api/v1/ingest';
+        $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://ingest.magewatch.io';
 
         $query = http_build_query([
             'v' => self::RUM_SCRIPT_VERSION,
@@ -57,8 +57,8 @@ class RumSnippet extends Template
 
     public function getIngestBaseUrl(): string
     {
-        $endpoint = $this->config->getEndpointUrl() ?? 'https://magewatch.io/api/v1/ingest';
-        $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://magewatch.io';
+        $endpoint = $this->config->getEndpointUrl() ?? 'https://ingest.magewatch.io/api/v1/ingest';
+        $base = preg_replace('#/api/v1/ingest$#', '', $endpoint) ?: 'https://ingest.magewatch.io';
 
         return rtrim($base, '/') . '/ingest/rum';
     }

@@ -14,7 +14,8 @@ use Psr\Log\LoggerInterface;
 class RemoteConfigSync
 {
     private const CACHE_KEY = 'magewatch_remote_config';
-    private const CACHE_LIFETIME = 300;
+    /** Keep last good config when sync fails (e.g. Cloudflare challenge). */
+    private const CACHE_LIFETIME = 604800;
     private const CACHE_TAG = 'magewatch';
 
     public function __construct(

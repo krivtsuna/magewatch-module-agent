@@ -7,6 +7,7 @@ namespace MageWatch\Agent\Controller\Adminhtml\Config;
 use MageWatch\Agent\Model\Config;
 use MageWatch\Agent\Model\PayloadBuilder;
 use MageWatch\Agent\Model\Transport\HttpClient;
+use MageWatch\Agent\Model\Transport\ResponseMessageFormatter;
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\Result\Json;
@@ -51,9 +52,10 @@ class TestPing extends Action implements HttpPostActionInterface
 
         $message = $transportResult->isSuccess()
             ? (string) __('Payload delivered successfully.')
-            : (string) ($transportResult->getErrorMessage()
-                ?? $transportResult->getResponseBody()
-                ?? __('Unknown error'));
+            : (string) (ResponseMessageFormatter::forAdmin(
+                $transportResult->getStatusCode(),
+                $transportResult->getErrorMessage() ?? $transportResult->getResponseBody()
+            ) ?? __('Unknown error'));
 
         return $result->setData([
             'success' => $transportResult->isSuccess(),

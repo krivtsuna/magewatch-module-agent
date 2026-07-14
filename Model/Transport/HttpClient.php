@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MageWatch\Agent\Model\Transport;
 
+use MageWatch\Agent\Model\PayloadBuilder;
 use Magento\Framework\HTTP\Client\CurlFactory;
 use Throwable;
 
@@ -35,6 +36,8 @@ class HttpClient
         $curl->addHeader('Content-Type', 'application/json');
         $curl->addHeader('Accept', 'application/json');
         $curl->addHeader('Authorization', 'Bearer ' . $bearerToken);
+        $curl->addHeader('User-Agent', 'MageWatch-Agent/' . PayloadBuilder::AGENT_VERSION);
+        $curl->addHeader('X-MageWatch-Agent', '1');
 
         try {
             $curl->post($url, (string) json_encode($payload, JSON_THROW_ON_ERROR));
@@ -59,6 +62,8 @@ class HttpClient
 
         $curl->addHeader('Accept', 'application/json');
         $curl->addHeader('Authorization', 'Bearer ' . $bearerToken);
+        $curl->addHeader('User-Agent', 'MageWatch-Agent/' . PayloadBuilder::AGENT_VERSION);
+        $curl->addHeader('X-MageWatch-Agent', '1');
 
         try {
             $curl->get($url);

@@ -106,7 +106,12 @@ class Config
 
         $remote = $this->getRemoteConfig();
 
-        return (bool) ($remote['rum_enabled'] ?? false);
+        if (array_key_exists('rum_enabled', $remote)) {
+            return (bool) $remote['rum_enabled'];
+        }
+
+        // Last-known remote config still has a key — keep RUM on when SaaS sync is temporarily blocked.
+        return $this->getRumPublicKey() !== null;
     }
 
     public function getRumPublicKey(): ?string

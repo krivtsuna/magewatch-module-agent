@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.11] - 2026-07-14
+
+### Added
+
+- **Immediate maintenance detection:** heartbeat pings include `maintenance_mode`; on state change the agent sends a ping right away (bypasses the 1-minute throttle) so MageWatch can notify without waiting for the next cron tick.
+
+[1.2.11]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.11
+
 ## [1.2.10] - 2026-07-13
 
 ### Fixed
