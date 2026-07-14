@@ -39,14 +39,9 @@ class HeartbeatDelivery
 
         $maintenanceOn = $this->maintenanceMode->isOn();
         $stateChanged = $this->maintenanceStateChanged($maintenanceOn);
-        $pingPayload = array_merge(
-            $this->payloadBuilder->buildHeartbeatPing(),
-            ['maintenance_mode' => $maintenanceOn]
-        );
 
         if ($stateChanged) {
-            $this->deliver($pingPayload, self::LAST_PING_CACHE_KEY, 'ping-maintenance-change');
-            $this->rememberMaintenanceState($maintenanceOn);
+            $this->sendMaintenanceStatePing($maintenanceOn);
 
             return;
         }
@@ -55,7 +50,24 @@ class HeartbeatDelivery
             return;
         }
 
-        $this->deliver($pingPayload, self::LAST_PING_CACHE_KEY, 'ping');
+        $this->sendMaintenanceStatePing($maintenanceOn, 'ping');
+    }
+
+    public function sendMaintenanceStatePing(bool $maintenanceOn, string $label = 'ping-maintenance-change'): void
+    {
+        if (!$this->prepareDelivery()) {
+            return;
+        }
+
+        $payload = array_merge(
+            $this->payloadBuilder->buildHeartbeatPing(),
+            ['maintenance_mode' => $maintenanceOn]
+        );
+
+        if (!$this->deliver($payload, self::LAST_PING_CACHE_KEY, $label)) {
+            return;
+        }
+
         $this->rememberMaintenanceState($maintenanceOn);
     }
 
@@ -136,7 +148,7 @@ class HeartbeatDelivery
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function deliver(array $payload, string $cacheKey, string $label): void
+    private function deliver(array $payload, string $cacheKey, string $label): bool
     {
         $endpointUrl = (string) $this->config->getEndpointUrl();
         $siteToken = (string) $this->config->getSiteToken();
@@ -150,7 +162,7 @@ class HeartbeatDelivery
                 $result->getErrorMessage() ?? $result->getResponseBody() ?? 'unknown error'
             ));
 
-            return;
+            return false;
         }
 
         $this->cache->save((string) time(), $cacheKey, [], 86400);
@@ -159,5 +171,7 @@ class HeartbeatDelivery
             $label,
             $result->getStatusCode() ?? 200
         ));
+
+        return true;
     }
 }

@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.12] - 2026-07-14
+
+### Added
+
+- **Instant maintenance pings:** plugin on `MaintenanceMode::enable/disable` sends a heartbeat to MageWatch immediately when you run `bin/magento maintenance:enable|disable` — no need to wait for the minute cron.
+
+[1.2.12]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.12
+
 ## [1.2.11] - 2026-07-14
 
 ### Added

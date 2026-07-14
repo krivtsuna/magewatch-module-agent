@@ -46,6 +46,18 @@
         </arguments>
     </type>
 
+    <type name="MageWatch\Agent\Plugin\App\MaintenanceModePlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\App\MaintenanceMode">
+        <plugin name="magewatch_maintenance_mode_notify"
+                type="MageWatch\Agent\Plugin\App\MaintenanceModePlugin"
+                sortOrder="100"/>
+    </type>
+
     <type name="MageWatch\Agent\Model\CollectorPool">
         <arguments>
             <argument name="collectors" xsi:type="array">
