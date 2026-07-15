@@ -3,6 +3,18 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.15] - 2026-07-15
+
+### Added
+
+- **Remote-config patch fingerprints:** `magento.patch_verification` checks marker files from MageWatch SaaS `security_patch_checks` — isolated APSB coverage without relying on `vendor/bin/patch-status`.
+
+### Fixed
+
+- **HTTP 100 false failure on Nexcess/proxied hosts:** send `Expect:` header to avoid `Delivery failed (HTTP 100): {"status":"ok"}` when ingest succeeded.
+
+[1.2.15]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.15
+
 ## [1.2.14] - 2026-07-15
 
 ### Added

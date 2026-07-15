@@ -35,6 +35,7 @@ class HttpClient
 
         $curl->addHeader('Content-Type', 'application/json');
         $curl->addHeader('Accept', 'application/json');
+        $curl->addHeader('Expect', '');
         $curl->addHeader('Authorization', 'Bearer ' . $bearerToken);
         $curl->addHeader('User-Agent', 'MageWatch-Agent/' . PayloadBuilder::AGENT_VERSION);
         $curl->addHeader('X-MageWatch-Agent', '1');
@@ -61,6 +62,7 @@ class HttpClient
         $curl->setTimeout(self::TOTAL_TIMEOUT_SECONDS);
 
         $curl->addHeader('Accept', 'application/json');
+        $curl->addHeader('Expect', '');
         $curl->addHeader('Authorization', 'Bearer ' . $bearerToken);
         $curl->addHeader('User-Agent', 'MageWatch-Agent/' . PayloadBuilder::AGENT_VERSION);
         $curl->addHeader('X-MageWatch-Agent', '1');

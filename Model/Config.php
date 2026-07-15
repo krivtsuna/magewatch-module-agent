@@ -123,6 +123,28 @@ class Config
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function getSecurityPatchChecks(): array
+    {
+        $remote = $this->getRemoteConfig();
+        $checks = $remote['security_patch_checks'] ?? [];
+
+        if (!is_array($checks)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($checks as $check) {
+            if (is_array($check)) {
+                $normalized[] = $check;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function getRemoteConfig(): array

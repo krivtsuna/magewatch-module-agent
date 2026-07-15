@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Model\Collector;
 
 use MageWatch\Agent\Api\CollectorInterface;
+use MageWatch\Agent\Model\Config;
+use MageWatch\Agent\Model\IsolatedPatchVerifier;
 use Magento\Framework\App\Cache\StateInterface as CacheStateInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -33,6 +35,8 @@ class SystemCollector implements CollectorInterface
         private readonly CacheStateInterface $cacheState,
         private readonly StoreManagerInterface $storeManager,
         private readonly ScopeConfigInterface $scopeConfig,
+        private readonly Config $config,
+        private readonly IsolatedPatchVerifier $isolatedPatchVerifier,
     ) {
     }
 
@@ -43,9 +47,17 @@ class SystemCollector implements CollectorInterface
 
     public function collect(): array
     {
+        $rootPath = $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath();
+        $magentoVersion = $this->productMetadata->getVersion();
+        $patchVerification = $this->isolatedPatchVerifier->verify(
+            $rootPath,
+            $magentoVersion,
+            $this->config->getSecurityPatchChecks(),
+        );
+
         return [
             'magento' => [
-                'version' => $this->productMetadata->getVersion(),
+                'version' => $magentoVersion,
                 'edition' => $this->productMetadata->getEdition(),
                 'mode' => $this->appState->getMode(),
                 'maintenance' => $this->maintenanceMode->isOn(),
@@ -56,6 +68,7 @@ class SystemCollector implements CollectorInterface
                 'base_currency_code' => $this->getBaseCurrencyCode(),
                 'timezone' => $this->getStoreTimezone(),
                 'patch_status' => $this->readPatchStatus(),
+                'patch_verification' => $patchVerification !== [] ? $patchVerification : null,
             ],
             'system' => $this->getDiskStats() + $this->getInodeStats() + ['disabled_caches' => $this->getDisabledCaches()],
         ];

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Test\Unit\Model\Collector;
 
 use MageWatch\Agent\Model\Collector\SystemCollector;
+use MageWatch\Agent\Model\Config;
+use MageWatch\Agent\Model\IsolatedPatchVerifier;
 use Magento\Framework\App\Cache\StateInterface as CacheStateInterface;
 use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\MaintenanceMode;
 use Magento\Framework\App\ProductMetadataInterface;
@@ -27,6 +30,9 @@ class SystemCollectorTest extends TestCase
     private TypeListInterface&MockObject $cacheTypeList;
     private CacheStateInterface&MockObject $cacheState;
     private StoreManagerInterface&MockObject $storeManager;
+    private ScopeConfigInterface&MockObject $scopeConfig;
+    private Config&MockObject $config;
+    private IsolatedPatchVerifier&MockObject $isolatedPatchVerifier;
     private ReadInterface&MockObject $rootDirectory;
     private SystemCollector $collector;
 
@@ -39,6 +45,9 @@ class SystemCollectorTest extends TestCase
         $this->cacheTypeList = $this->createMock(TypeListInterface::class);
         $this->cacheState = $this->createMock(CacheStateInterface::class);
         $this->storeManager = $this->createMock(StoreManagerInterface::class);
+        $this->scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $this->config = $this->createMock(Config::class);
+        $this->isolatedPatchVerifier = $this->createMock(IsolatedPatchVerifier::class);
         $this->rootDirectory = $this->createMock(ReadInterface::class);
 
         $this->filesystem->method('getDirectoryRead')
@@ -60,6 +69,9 @@ class SystemCollectorTest extends TestCase
         $store->method('getBaseUrl')->willReturn('https://shop.example/');
         $this->storeManager->method('getStores')->willReturn([$store]);
 
+        $this->config->method('getSecurityPatchChecks')->willReturn([]);
+        $this->isolatedPatchVerifier->method('verify')->willReturn([]);
+
         $this->collector = new SystemCollector(
             $this->filesystem,
             $this->productMetadata,
@@ -67,7 +79,10 @@ class SystemCollectorTest extends TestCase
             $this->maintenanceMode,
             $this->cacheTypeList,
             $this->cacheState,
-            $this->storeManager
+            $this->storeManager,
+            $this->scopeConfig,
+            $this->config,
+            $this->isolatedPatchVerifier,
         );
     }
 
