@@ -55,6 +55,7 @@ class SystemCollector implements CollectorInterface
                 'composer_lock_hash' => $this->readComposerLockHash(),
                 'base_currency_code' => $this->getBaseCurrencyCode(),
                 'timezone' => $this->getStoreTimezone(),
+                'patch_status' => $this->readPatchStatus(),
             ],
             'system' => $this->getDiskStats() + $this->getInodeStats() + ['disabled_caches' => $this->getDisabledCaches()],
         ];
@@ -210,5 +211,30 @@ class SystemCollector implements CollectorInterface
         $hash = @hash_file('sha256', $lockPath);
 
         return is_string($hash) ? $hash : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function readPatchStatus(): ?array
+    {
+        $rootPath = $this->filesystem->getDirectoryRead(DirectoryList::ROOT)->getAbsolutePath();
+        $binary = $rootPath.'vendor/bin/patch-status';
+        if (! is_readable($binary)) {
+            return null;
+        }
+
+        $php = defined('PHP_BINARY') && is_string(PHP_BINARY) && PHP_BINARY !== ''
+            ? PHP_BINARY
+            : 'php';
+        $command = escapeshellarg($php).' '.escapeshellarg($binary).' --format=json 2>/dev/null';
+        $output = shell_exec($command);
+        if (! is_string($output) || trim($output) === '') {
+            return null;
+        }
+
+        $decoded = json_decode($output, true);
+
+        return is_array($decoded) ? $decoded : null;
     }
 }

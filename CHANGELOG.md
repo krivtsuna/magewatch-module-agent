@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.14] - 2026-07-15
+
+### Added
+
+- **Adobe patch-status in heartbeat:** `magento.patch_status` from `vendor/bin/patch-status` when present — lets MageWatch verify isolated APSB patches after monthly security releases.
+
+[1.2.14]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.14
+
 ## [1.2.13] - 2026-07-14
 
 ### Fixed
