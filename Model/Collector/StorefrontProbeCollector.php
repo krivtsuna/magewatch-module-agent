@@ -9,7 +9,7 @@ use MageWatch\Agent\Model\MagentoErrorPageDetector;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Probes the storefront from the Magento server (origin) so MageWatch can
+ * Probes the storefront homepage from the Magento server (origin) so MageWatch can
  * distinguish real outages from Cloudflare/WAF blocks on external checks.
  */
 class StorefrontProbeCollector implements CollectorInterface
@@ -43,7 +43,6 @@ class StorefrontProbeCollector implements CollectorInterface
         }
 
         $homepage = $this->probe($baseUrl);
-        $checkout = $this->probe($baseUrl.'/checkout');
 
         return [
             'storefront_probe' => [
@@ -51,10 +50,6 @@ class StorefrontProbeCollector implements CollectorInterface
                 'homepage_status' => $homepage['status'],
                 'homepage_ms' => $homepage['ms'],
                 'homepage_magento_error' => $homepage['magento_error'],
-                'checkout_ok' => $checkout['ok'],
-                'checkout_status' => $checkout['status'],
-                'checkout_ms' => $checkout['ms'],
-                'checkout_magento_error' => $checkout['magento_error'],
                 'probe_method' => $homepage['method'],
             ],
         ];
@@ -66,10 +61,6 @@ class StorefrontProbeCollector implements CollectorInterface
      *     homepage_status: ?int,
      *     homepage_ms: ?int,
      *     homepage_magento_error: bool,
-     *     checkout_ok: bool,
-     *     checkout_status: ?int,
-     *     checkout_ms: ?int,
-     *     checkout_magento_error: bool,
      *     probe_method: string
      * }
      */
@@ -80,10 +71,6 @@ class StorefrontProbeCollector implements CollectorInterface
             'homepage_status' => null,
             'homepage_ms' => null,
             'homepage_magento_error' => false,
-            'checkout_ok' => false,
-            'checkout_status' => null,
-            'checkout_ms' => null,
-            'checkout_magento_error' => false,
             'probe_method' => $method,
         ];
     }
@@ -174,18 +161,12 @@ class StorefrontProbeCollector implements CollectorInterface
 
         $body = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $effectiveUrl = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         curl_close($ch);
 
         $ms = (int) round((microtime(true) - $start) * 1000);
         $bodySample = is_string($body) ? mb_substr($body, 0, self::BODY_READ_LIMIT) : null;
         $magentoError = $this->errorPageDetector->isErrorPage($bodySample);
         $ok = $status >= 200 && $status < 400 && ! $magentoError;
-
-        if (! $ok && str_contains($path, '/checkout') && $this->isEmptyCartCheckoutRedirect($status, $effectiveUrl, $magentoError)) {
-            $ok = true;
-            $magentoError = false;
-        }
 
         return [
             'ok' => $ok,
@@ -194,20 +175,5 @@ class StorefrontProbeCollector implements CollectorInterface
             'method' => $viaLocalhost ? 'origin' : 'direct',
             'magento_error' => $magentoError,
         ];
-    }
-
-    private function isEmptyCartCheckoutRedirect(int $status, string $effectiveUrl, bool $magentoError): bool
-    {
-        if ($magentoError) {
-            return false;
-        }
-
-        if (in_array($status, [301, 302, 303, 307, 308], true)) {
-            return true;
-        }
-
-        return $status >= 200
-            && $status < 400
-            && str_contains(strtolower($effectiveUrl), '/checkout/cart');
     }
 }

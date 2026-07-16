@@ -26,8 +26,8 @@ class StorefrontProbeCollectorTest extends TestCase
         $this->assertArrayHasKey('storefront_probe', $result);
         $this->assertSame('none', $result['storefront_probe']['probe_method']);
         $this->assertFalse($result['storefront_probe']['homepage_ok']);
-        $this->assertFalse($result['storefront_probe']['checkout_ok']);
         $this->assertFalse($result['storefront_probe']['homepage_magento_error']);
+        $this->assertArrayNotHasKey('checkout_ok', $result['storefront_probe']);
     }
 
     public function testCollectorCode(): void

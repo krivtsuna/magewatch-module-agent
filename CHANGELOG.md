@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.16] - 2026-07-15
+
+### Changed
+
+- **Storefront probe:** homepage only — guest `/checkout` URL probe removed. Checkout health on MageWatch SaaS uses RUM funnel and order volume instead.
+
+[1.2.16]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.16
+
 ## [1.2.15] - 2026-07-15
 
 ### Added
