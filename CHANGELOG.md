@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.17] - 2026-07-23
+
+### Changed
+
+- **License:** switched from OSL-3.0 to a proprietary source-available licence (active MageWatch account required).
+
+[1.2.17]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.17
+
 ## [1.2.16] - 2026-07-15
 
 ### Changed

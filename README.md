@@ -1,8 +1,27 @@
 # MageWatch Agent for Magento 2
 
-Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). A lightweight heartbeat runs every minute (paid) to confirm the store is alive; every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes JSON to [MageWatch](https://magewatch.io) over HTTPS.
+**Most uptime tools only ask: is the homepage returning 200?**
 
-Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/module-agent)
+This agent runs **inside Magento** and reports what those tools never see:
+
+| Uptime ping says… | MageWatch agent reports… |
+|-------------------|--------------------------|
+| Site is “up” | Cron stopped 40 minutes ago |
+| Site is “up” | `catalog_product_price` indexer invalid |
+| Site is “up” | Order rate dropped to 0 vs baseline |
+| Site is “up” | Queue consumers stuck / backlog growing |
+| Site is “up” | Unexpected PHP under `pub/` |
+
+Example alert your agency dashboard can open with a playbook:
+
+> **Critical · Orders anomaly** — hourly orders fell to **0** (expected **8–22**).  
+> First step: check payment webhooks and `pending_payment` backlog.
+
+Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/module-agent) · Product: [magewatch.io](https://magewatch.io)
+
+---
+
+Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). A lightweight heartbeat runs every minute (paid) to confirm the store is alive; every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes JSON to MageWatch over HTTPS.
 
 ## What it is
 
@@ -10,7 +29,7 @@ The MageWatch agent runs inside your Magento store. It does not modify catalog, 
 
 ## What it does NOT do
 
-- **Never writes** to catalog, sales, or customer tables — collectors are read-only.
+- **Never modifies** catalog, sales, or customer tables — collectors are read-only with respect to store data (the agent may write its own operational state such as log offsets).
 - **No customer PII** — order data is hourly aggregates only (counts and revenue buckets), not individual orders or buyer details.
 - **No remote code execution** — the agent only pushes JSON over HTTPS to your MageWatch ingest endpoint. There is no inbound control channel.
 - **Open source** — every collector is plain PHP under `Model/Collector/`. Inspect the code before you install on production.
@@ -76,4 +95,4 @@ What the agent collects, how long MageWatch retains it, and DPA terms for agenci
 
 ## License
 
-OSL-3.0 — see [LICENSE](LICENSE).
+Proprietary — see [LICENSE](LICENSE). Use requires an active MageWatch account.

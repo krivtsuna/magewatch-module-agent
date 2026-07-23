@@ -2,7 +2,7 @@
     "name": "magewatch/module-agent",
     "description": "Read-only monitoring agent for Magento 2 that collects health metrics and pushes them to the MageWatch SaaS API.",
     "type": "magento2-module",
-    "license": "OSL-3.0",
+    "license": "proprietary",
     "keywords": [
         "magento2",
         "magento",
