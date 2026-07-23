@@ -14,6 +14,9 @@ use Magento\Framework\DB\Sql\Expression;
 /**
  * Reports cron health: stuck jobs, missed/error counts in the last hour,
  * schedule table bloat, dead-cron detection, and per-group aggregates.
+ *
+ * Missed runs are grouped by job_code. Errors are grouped by job_code + message
+ * so identical failures collapse into one row with a count.
  */
 class CronCollector implements CollectorInterface
 {
@@ -23,6 +26,11 @@ class CronCollector implements CollectorInterface
     private const STATUS_MISSED = 'missed';
     private const STATUS_ERROR = 'error';
     private const STATUS_SUCCESS = 'success';
+
+    /** Cap payload size for noisy stores. */
+    private const MAX_STATUS_ROWS = 40;
+
+    private const MESSAGE_MAX_LEN = 280;
 
     public function __construct(
         private readonly ResourceConnection $resourceConnection,
@@ -43,8 +51,8 @@ class CronCollector implements CollectorInterface
         $now = $this->clock->now();
 
         $stuck = $this->getStuckJobs($connection, $table, $now);
-        $missed = $this->getStatusCountsByJob($connection, $table, self::STATUS_MISSED, $now);
-        $errors = $this->getStatusCountsByJob($connection, $table, self::STATUS_ERROR, $now);
+        $missed = $this->getMissedCountsByJob($connection, $table, $now);
+        $errors = $this->getErrorCountsByJob($connection, $table, $now);
         $groups = $this->buildGroupStats($connection, $table, $now, $stuck, $missed, $errors);
 
         return [
@@ -87,19 +95,20 @@ class CronCollector implements CollectorInterface
     /**
      * @return array<int, array{job_code: string, count: int}>
      */
-    private function getStatusCountsByJob(
+    private function getMissedCountsByJob(
         AdapterInterface $connection,
         string $table,
-        string $status,
         \DateTimeImmutable $now
     ): array {
         $since = $now->modify('-1 hour')->format('Y-m-d H:i:s');
 
         $select = $connection->select()
             ->from($table, ['job_code', 'cnt' => new Expression('COUNT(*)')])
-            ->where('status = ?', $status)
+            ->where('status = ?', self::STATUS_MISSED)
             ->where('scheduled_at >= ?', $since)
-            ->group('job_code');
+            ->group('job_code')
+            ->order(new Expression('COUNT(*) DESC'))
+            ->limit(self::MAX_STATUS_ROWS);
 
         $result = [];
         foreach ($connection->fetchAll($select) as $row) {
@@ -113,9 +122,63 @@ class CronCollector implements CollectorInterface
     }
 
     /**
+     * Group identical failures (same job_code + same message text).
+     *
+     * @return array<int, array{job_code: string, count: int, message?: string}>
+     */
+    private function getErrorCountsByJob(
+        AdapterInterface $connection,
+        string $table,
+        \DateTimeImmutable $now
+    ): array {
+        $since = $now->modify('-1 hour')->format('Y-m-d H:i:s');
+
+        $select = $connection->select()
+            ->from($table, [
+                'job_code',
+                'messages',
+                'cnt' => new Expression('COUNT(*)'),
+            ])
+            ->where('status = ?', self::STATUS_ERROR)
+            ->where('scheduled_at >= ?', $since)
+            ->group(['job_code', 'messages'])
+            ->order(new Expression('COUNT(*) DESC'))
+            ->limit(self::MAX_STATUS_ROWS);
+
+        $result = [];
+        foreach ($connection->fetchAll($select) as $row) {
+            $entry = [
+                'job_code' => (string) $row['job_code'],
+                'count' => (int) $row['cnt'],
+            ];
+            $message = $this->normalizeMessage(isset($row['messages']) ? (string) $row['messages'] : '');
+            if ($message !== null) {
+                $entry['message'] = $message;
+            }
+            $result[] = $entry;
+        }
+
+        return $result;
+    }
+
+    private function normalizeMessage(string $raw): ?string
+    {
+        $normalized = preg_replace('/\s+/', ' ', trim($raw)) ?? '';
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (mb_strlen($normalized) > self::MESSAGE_MAX_LEN) {
+            return mb_substr($normalized, 0, self::MESSAGE_MAX_LEN - 1).'…';
+        }
+
+        return $normalized;
+    }
+
+    /**
      * @param  array<int, array{job_code: string, executed_at: string}>  $stuck
      * @param  array<int, array{job_code: string, count: int}>  $missed
-     * @param  array<int, array{job_code: string, count: int}>  $errors
+     * @param  array<int, array{job_code: string, count: int, message?: string}>  $errors
      * @return array<int, array{group: string, last_success_at: ?string, missed_last_hour: int, errors_last_hour: int, stuck: int}>
      */
     private function buildGroupStats(

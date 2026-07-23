@@ -3,6 +3,18 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.18] - 2026-07-23
+
+### Added
+
+- **Cron errors:** group by `job_code` + `messages` and include a truncated `message` on each error row so identical failures collapse with a count.
+
+### Changed
+
+- Missed/error job lists are sorted by count (desc) and capped at 40 rows.
+
+[1.2.18]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.18
+
 ## [1.2.17] - 2026-07-23
 
 ### Changed
