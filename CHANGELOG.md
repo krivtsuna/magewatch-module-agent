@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.22] - 2026-07-27
+
+### Added
+
+- **Storefront probe evidence:** on failed homepage probes, send `homepage_block_kind`, a short `homepage_body_excerpt` (e.g. Cloudflare “Just a moment…”), and `homepage_cf_ray` so MageWatch can show the block text and ask merchants to allowlist the probe IP.
+
+[1.2.22]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.22
+
 ## [1.2.21] - 2026-07-27
 
 ### Fixed

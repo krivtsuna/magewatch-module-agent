@@ -43,7 +43,7 @@ Envelope (always present):
 
 ```json
 {
-  "agent_version": "1.2.21",
+  "agent_version": "1.2.22",
   "collected_at": "2026-07-03T10:05:00+00:00",
   "health": {
     "status": "healthy|degraded|critical|compromised",
