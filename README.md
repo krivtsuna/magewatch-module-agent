@@ -10,7 +10,7 @@ This agent runs **inside Magento** and reports what those tools never see:
 | Site is “up” | `catalog_product_price` indexer invalid |
 | Site is “up” | Order rate dropped to 0 vs baseline |
 | Site is “up” | Queue consumers stuck / backlog growing |
-| Site is “up” | Unexpected PHP under `pub/` |
+| Site is “up” | Unexpected PHP under `pub/` or injected JS in DB HTML |
 
 Example alert your agency dashboard can open with a playbook:
 
@@ -21,7 +21,7 @@ Packagist: [magewatch/module-agent](https://packagist.org/packages/magewatch/mod
 
 ---
 
-Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). A lightweight heartbeat runs every minute (paid) to confirm the store is alive; every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene — and pushes JSON to MageWatch over HTTPS.
+Read-only monitoring agent for **Magento 2.4.x** (Open Source or Adobe Commerce). A lightweight heartbeat runs every minute (paid) to confirm the store is alive; every five minutes it collects health metrics — indexers, cron, queues, order aggregates, log signals, system resources, and security hygiene (pub/ PHP, DB content integrity, admin/config checks) — and pushes JSON to MageWatch over HTTPS.
 
 ## What it is
 
@@ -43,7 +43,7 @@ composer require magewatch/module-agent
 bin/magento setup:upgrade
 ```
 
-Then in Magento admin: **Stores → Configuration → MageWatch → Agent** — paste the site token from your MageWatch dashboard and set the ingest URL (production: `https://ingest.magewatch.io/api/v1/ingest`).
+Then in Magento admin: **Stores → Configuration → MageWatch → Agent** — paste the site token from your MageWatch dashboard and set the ingest URL (production: `https://ingest.magewatch.io/api/v1/ingest`). Use **Send Test Ping** (1.2.19+) to verify connectivity and deliver the first full snapshot immediately.
 
 Full step-by-step guide: [magewatch.io/docs/install](https://magewatch.io/docs/install)
 

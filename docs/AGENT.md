@@ -15,9 +15,14 @@ packages/magewatch-module-agent/
 ├── Logger/                             # var/log/magewatch.log
 ├── Model/
 │   ├── Collector/                      # One class per metric domain
+│   ├── ContentIntegrityChecker.php     # DB HTML / CMS Magecart-style scan
+│   ├── AdminSecurityChecker.php        # Failed logins, locks, 2FA
+│   ├── ConfigHygieneChecker.php        # Template hints / minify / signing
+│   ├── HealthStatus.php                # Status vocabulary
+│   ├── HealthRollup.php                # Tier-1/Tier-2 overall health
 │   ├── CollectorPool.php               # DI registry of collectors
 │   ├── Config.php                      # Scope config + remote overrides
-│   ├── PayloadBuilder.php              # Merges collector output
+│   ├── PayloadBuilder.php              # Merges collector output + health rollup
 │   ├── Transport/HttpClient.php        # HTTPS POST (Curl, Bearer token)
 │   └── LogOffset/                      # DB-backed log file offsets
 ├── Test/Unit/                          # PHPUnit (mocked ResourceConnection)
@@ -38,8 +43,12 @@ Envelope (always present):
 
 ```json
 {
-  "agent_version": "1.0.15",
+  "agent_version": "1.2.19",
   "collected_at": "2026-07-03T10:05:00+00:00",
+  "health": {
+    "status": "healthy|degraded|critical|compromised",
+    "checks": { "database": "healthy", "security": "compromised", "cron": "degraded" }
+  },
   "collector_errors": ["optional: code: message"]
 }
 ```
@@ -59,7 +68,13 @@ Envelope (always present):
 
 ### Post-MVP sections (also shipped)
 
-`security`, `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database` — validated by the SaaS ingest endpoint.
+`security` (incl. `content_integrity`, `admin_security`, `config_hygiene` + `status`), `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database`, top-level `health` — validated by the SaaS ingest endpoint.
+
+**Security (1.2.19+):** behaviour-based scan of `core_config_data` HTML paths + CMS for obfuscated JS; admin failed-login / lock / 2FA counts; production config hygiene. Findings send signatures and locations only — never the injected HTML/JS payload.
+
+**Health rollup:** Tier-1 (database, infrastructure, system, storefront_probe, security) contribute full severity to `health.status`. Tier-2 operational collectors cap `critical` → `degraded` for overall only. `compromised` is never capped.
+
+**Send Test Ping:** connectivity ping, then immediate full snapshot (`sync_on_connect`) so SaaS has data without waiting for cron.
 
 ## Admin configuration
 
@@ -72,7 +87,7 @@ Envelope (always present):
 | Site token | `magewatch/agent/site_token` | Encrypted; Bearer header |
 | Stuck cron threshold | `magewatch/agent/stuck_cron_threshold_minutes` | Default 30 |
 | Per-collector toggles | `magewatch/collectors/*` | Each collector can be disabled |
-| Send test ping | Admin button | AJAX → builds live payload, shows HTTP status |
+| Send test ping | Admin button | Connectivity check + immediate full snapshot (1.2.19+) |
 
 ## Engineering rules
 
