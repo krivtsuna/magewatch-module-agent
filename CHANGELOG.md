@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.21] - 2026-07-27
+
+### Fixed
+
+- **Admin 2FA:** when `tfa_user_config` is missing (TwoFactorAuth module disabled), count all active admins as without 2FA instead of reporting `0`. Also treat empty `encoded_config` as unenrolled; support legacy `msp_tfa_user_config`. Payload adds `tfa_available`.
+
+[1.2.21]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.21
+
 ## [1.2.20] - 2026-07-27
 
 ### Changed
