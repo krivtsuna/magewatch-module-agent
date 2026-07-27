@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.20] - 2026-07-27
+
+### Changed
+
+- **Docs:** refresh README/AGENT.md and republish as a new Packagist version after tag 1.2.19 was restored for immutability (no functional agent changes).
+
+[1.2.20]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.20
+
 ## [1.2.19] - 2026-07-27
 
 ### Added
