@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Model\Collector;
 
 use MageWatch\Agent\Api\CollectorInterface;
+use MageWatch\Agent\Model\AdminSecurityChecker;
 use MageWatch\Agent\Model\Clock;
+use MageWatch\Agent\Model\ConfigHygieneChecker;
+use MageWatch\Agent\Model\ContentIntegrityChecker;
+use MageWatch\Agent\Model\HealthStatus;
 use MageWatch\Agent\Model\PubPhpIntegrityChecker;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
@@ -15,13 +19,13 @@ use Throwable;
 
 /**
  * Lightweight malware & security signals: unexpected PHP in pub/, suspicious
- * code patterns in recently modified files, and new admin users.
+ * code patterns, new admin users, DB content integrity, admin hygiene, config hygiene.
  */
 class SecurityCollector implements CollectorInterface
 {
     private const CODE = 'security';
 
-  /** @var list<string> */
+    /** @var list<string> */
     private const SUSPICIOUS_PATTERNS = [
         'eval\s*\(',
         'base64_decode\s*\(',
@@ -42,6 +46,9 @@ class SecurityCollector implements CollectorInterface
         private readonly Filesystem $filesystem,
         private readonly ResourceConnection $resourceConnection,
         private readonly Clock $clock,
+        private readonly ContentIntegrityChecker $contentIntegrityChecker,
+        private readonly AdminSecurityChecker $adminSecurityChecker,
+        private readonly ConfigHygieneChecker $configHygieneChecker,
     ) {
     }
 
@@ -61,14 +68,37 @@ class SecurityCollector implements CollectorInterface
             DIRECTORY_SEPARATOR
         ).DIRECTORY_SEPARATOR;
 
-        $pubIntegrity = (new PubPhpIntegrityChecker())->scan($pubPath, $rootPath);
+        $pubIntegrity = (new PubPhpIntegrityChecker)->scan($pubPath, $rootPath);
+        $contentIntegrity = $this->contentIntegrityChecker->scan();
+        $adminSecurity = $this->adminSecurityChecker->scan();
+        $configHygiene = $this->configHygieneChecker->scan();
+        $suspiciousPatterns = $this->scanSuspiciousPatterns($pubPath);
+        $newAdminUsers = $this->findNewAdminUsers();
+
+        $status = HealthStatus::HEALTHY;
+        if ($pubIntegrity['unexpected_pub_php'] !== []
+            || $pubIntegrity['core_pub_php_modified'] !== []
+            || $suspiciousPatterns !== []
+        ) {
+            $status = HealthStatus::worse($status, HealthStatus::CRITICAL);
+        }
+        $status = HealthStatus::worse($status, (string) ($contentIntegrity['status'] ?? HealthStatus::HEALTHY));
+        $status = HealthStatus::worse($status, (string) ($adminSecurity['status'] ?? HealthStatus::HEALTHY));
+        $status = HealthStatus::worse($status, (string) ($configHygiene['status'] ?? HealthStatus::HEALTHY));
+        if ($newAdminUsers !== []) {
+            $status = HealthStatus::worse($status, HealthStatus::DEGRADED);
+        }
 
         return [
             'security' => [
+                'status' => $status,
                 'unexpected_pub_php' => $pubIntegrity['unexpected_pub_php'],
                 'core_pub_php_modified' => $pubIntegrity['core_pub_php_modified'],
-                'suspicious_patterns' => $this->scanSuspiciousPatterns($pubPath),
-                'new_admin_users' => $this->findNewAdminUsers(),
+                'suspicious_patterns' => $suspiciousPatterns,
+                'new_admin_users' => $newAdminUsers,
+                'content_integrity' => $contentIntegrity,
+                'admin_security' => $adminSecurity,
+                'config_hygiene' => $configHygiene,
             ],
         ];
     }

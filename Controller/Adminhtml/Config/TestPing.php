@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace MageWatch\Agent\Controller\Adminhtml\Config;
 
 use MageWatch\Agent\Model\Config;
+use MageWatch\Agent\Model\HeartbeatDelivery;
 use MageWatch\Agent\Model\PayloadBuilder;
 use MageWatch\Agent\Model\Transport\HttpClient;
 use MageWatch\Agent\Model\Transport\ResponseMessageFormatter;
@@ -14,9 +15,8 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 
 /**
- * Builds a live payload against the current saved configuration and
- * posts it to the configured endpoint, returning the outcome as JSON
- * for the "Send Test Ping" admin config button.
+ * Verifies connectivity, then immediately ships a full metrics snapshot so
+ * MageWatch SaaS has data without waiting for the next cron cycle.
  */
 class TestPing extends Action implements HttpPostActionInterface
 {
@@ -27,7 +27,8 @@ class TestPing extends Action implements HttpPostActionInterface
         private readonly JsonFactory $resultJsonFactory,
         private readonly Config $config,
         private readonly PayloadBuilder $payloadBuilder,
-        private readonly HttpClient $httpClient
+        private readonly HttpClient $httpClient,
+        private readonly HeartbeatDelivery $heartbeatDelivery,
     ) {
         parent::__construct($context);
     }
@@ -50,17 +51,29 @@ class TestPing extends Action implements HttpPostActionInterface
         $payload = $this->payloadBuilder->buildTestPing();
         $transportResult = $this->httpClient->send($endpointUrl, $siteToken, $payload);
 
-        $message = $transportResult->isSuccess()
-            ? (string) __('Payload delivered successfully.')
-            : (string) (ResponseMessageFormatter::forAdmin(
+        if (!$transportResult->isSuccess()) {
+            $message = (string) (ResponseMessageFormatter::forAdmin(
                 $transportResult->getStatusCode(),
                 $transportResult->getErrorMessage() ?? $transportResult->getResponseBody()
             ) ?? __('Unknown error'));
 
+            return $result->setData([
+                'success' => false,
+                'status' => $transportResult->getStatusCode(),
+                'message' => $message,
+            ]);
+        }
+
+        $snapshotOk = $this->heartbeatDelivery->sendFullNow();
+        $message = $snapshotOk
+            ? (string) __('Connected — first snapshot delivered to MageWatch.')
+            : (string) __('Connected, but the first full snapshot failed. Cron will retry shortly.');
+
         return $result->setData([
-            'success' => $transportResult->isSuccess(),
+            'success' => true,
             'status' => $transportResult->getStatusCode(),
             'message' => $message,
+            'snapshot_delivered' => $snapshotOk,
         ]);
     }
 }

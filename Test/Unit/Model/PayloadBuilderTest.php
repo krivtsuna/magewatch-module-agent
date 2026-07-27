@@ -8,6 +8,7 @@ use MageWatch\Agent\Api\CollectorInterface;
 use MageWatch\Agent\Model\Clock;
 use MageWatch\Agent\Model\CollectorPool;
 use MageWatch\Agent\Model\Config;
+use MageWatch\Agent\Model\HealthRollup;
 use MageWatch\Agent\Model\PayloadBuilder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -37,7 +38,7 @@ class PayloadBuilderTest extends TestCase
         $cronCollector = $this->createCollector('cron', ['cron' => ['schedule_rows' => 100]]);
 
         $pool = new CollectorPool([$indexerCollector, $cronCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger);
+        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
 
         $payload = $builder->build();
 
@@ -47,6 +48,9 @@ class PayloadBuilderTest extends TestCase
         $this->assertSame([['id' => 'catalog_product_price']], $payload['indexers']);
         $this->assertSame(['schedule_rows' => 100], $payload['cron']);
         $this->assertArrayNotHasKey('collector_errors', $payload);
+        $this->assertSame('healthy', $payload['health']['status']);
+        $this->assertSame('healthy', $payload['health']['checks']['cron']);
+        $this->assertSame('healthy', $payload['health']['checks']['indexer']);
     }
 
     public function testBuildSkipsDisabledCollectors(): void
@@ -62,7 +66,7 @@ class PayloadBuilderTest extends TestCase
         $queueCollector->expects($this->never())->method('collect');
 
         $pool = new CollectorPool([$indexerCollector, $queueCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger);
+        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
 
         $payload = $builder->build();
 
@@ -85,7 +89,7 @@ class PayloadBuilderTest extends TestCase
             ->with($this->stringContains('order_stats'));
 
         $pool = new CollectorPool([$goodCollector, $failingCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger);
+        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
 
         $payload = $builder->build();
 
@@ -99,7 +103,7 @@ class PayloadBuilderTest extends TestCase
     public function testBuildHeartbeatPingIsMinimal(): void
     {
         $pool = new CollectorPool([]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger);
+        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
 
         $payload = $builder->buildHeartbeatPing();
 

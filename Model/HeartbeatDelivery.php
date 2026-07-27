@@ -82,12 +82,32 @@ class HeartbeatDelivery
             return;
         }
 
-        $this->deliver(
-            $this->payloadBuilder->build(),
-            self::LAST_FULL_CACHE_KEY,
-            'full'
-        );
+        $this->deliverFull(false);
+    }
+
+    /**
+     * Immediate full snapshot (bypasses throttle) — used after Test Connection.
+     */
+    public function sendFullNow(): bool
+    {
+        if (!$this->prepareDelivery()) {
+            return false;
+        }
+
+        return $this->deliverFull(true);
+    }
+
+    private function deliverFull(bool $syncOnConnect): bool
+    {
+        $payload = $this->payloadBuilder->build();
+        if ($syncOnConnect) {
+            $payload['sync_on_connect'] = true;
+        }
+
+        $ok = $this->deliver($payload, self::LAST_FULL_CACHE_KEY, $syncOnConnect ? 'sync-on-connect' : 'full');
         $this->rememberMaintenanceState($this->maintenanceMode->isOn());
+
+        return $ok;
     }
 
     private function prepareDelivery(): bool

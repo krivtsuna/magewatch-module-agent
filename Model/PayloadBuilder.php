@@ -15,13 +15,14 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.18';
+    public const AGENT_VERSION = '1.2.19';
 
     public function __construct(
         private readonly Config $config,
         private readonly CollectorPool $collectorPool,
         private readonly Clock $clock,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly HealthRollup $healthRollup,
     ) {
     }
 
@@ -57,6 +58,8 @@ class PayloadBuilder
         if ($collectorErrors !== []) {
             $payload['collector_errors'] = $collectorErrors;
         }
+
+        $payload['health'] = $this->healthRollup->build($payload, $collectorErrors);
 
         return $payload;
     }

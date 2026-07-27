@@ -3,6 +3,18 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.19] - 2026-07-27
+
+### Added
+
+- **Content integrity:** scan `core_config_data` HTML paths + CMS for Magecart-style obfuscated JS (`security.content_integrity`).
+- **Admin security:** failed logins (24h), locked accounts, users without 2FA (`security.admin_security`).
+- **Config hygiene:** template hints / minify / signing / rewrites / async email (`security.config_hygiene`).
+- **Health rollup:** top-level `health.status` + `health.checks` with Tier-1 vs Tier-2 capping (operational critical → degraded for overall only).
+- **Sync-on-connect:** Test Connection verifies ping then ships a full snapshot immediately (`sync_on_connect`).
+
+[1.2.19]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.19
+
 ## [1.2.18] - 2026-07-23
 
 ### Added

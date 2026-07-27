@@ -15,21 +15,21 @@ define(['jquery'], function ($) {
                 url: config.ajaxUrl,
                 type: 'POST',
                 dataType: 'json',
-                timeout: 30000,
+                timeout: 120000,
                 data: {
                     form_key: window.FORM_KEY
                 }
             }).done(function (response) {
                 if (response.success) {
                     $result.css('color', 'green')
-                        .text($.mage.__('Success (HTTP %1)').replace('%1', response.status));
+                        .text(response.message || $.mage.__('Success (HTTP %1)').replace('%1', response.status));
                 } else {
                     $result.css('color', 'red')
                         .text($.mage.__('Failed: %1').replace('%1', response.message));
                 }
             }).fail(function (jqXHR, textStatus) {
                 if (textStatus === 'timeout') {
-                    $result.css('color', 'red').text($.mage.__('Request timed out after 30 seconds.'));
+                    $result.css('color', 'red').text($.mage.__('Request timed out after 120 seconds.'));
                 } else {
                     $result.css('color', 'red').text($.mage.__('Request failed.'));
                 }
