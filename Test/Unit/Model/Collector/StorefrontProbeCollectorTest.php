@@ -6,6 +6,7 @@ namespace MageWatch\Agent\Test\Unit\Model\Collector;
 
 use MageWatch\Agent\Model\Collector\StorefrontProbeCollector;
 use MageWatch\Agent\Model\MagentoErrorPageDetector;
+use MageWatch\Agent\Model\ProbeBlockDetector;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +21,11 @@ class StorefrontProbeCollectorTest extends TestCase
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
 
-        $collector = new StorefrontProbeCollector($storeManager, new MagentoErrorPageDetector);
+        $collector = new StorefrontProbeCollector(
+            $storeManager,
+            new MagentoErrorPageDetector,
+            new ProbeBlockDetector,
+        );
         $result = $collector->collect();
 
         $this->assertArrayHasKey('storefront_probe', $result);
@@ -33,7 +38,11 @@ class StorefrontProbeCollectorTest extends TestCase
     public function testCollectorCode(): void
     {
         $storeManager = $this->createMock(StoreManagerInterface::class);
-        $collector = new StorefrontProbeCollector($storeManager, new MagentoErrorPageDetector);
+        $collector = new StorefrontProbeCollector(
+            $storeManager,
+            new MagentoErrorPageDetector,
+            new ProbeBlockDetector,
+        );
 
         $this->assertSame('storefront_probe', $collector->getCode());
     }

@@ -26,7 +26,7 @@ class StorefrontProbeCollector implements CollectorInterface
     public function __construct(
         private readonly StoreManagerInterface $storeManager,
         private readonly MagentoErrorPageDetector $errorPageDetector,
-        private readonly ProbeBlockDetector $probeBlockDetector = new ProbeBlockDetector,
+        private readonly ProbeBlockDetector $probeBlockDetector,
     ) {
     }
 

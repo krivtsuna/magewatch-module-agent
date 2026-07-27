@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.23] - 2026-07-27
+
+### Fixed
+
+- **DI compile:** remove `new ProbeBlockDetector` constructor default — Magento compiled metadata cannot `__set_state()` that object and broke `bin/magento` after upgrade.
+
+[1.2.23]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.23
+
 ## [1.2.22] - 2026-07-27
 
 ### Added
