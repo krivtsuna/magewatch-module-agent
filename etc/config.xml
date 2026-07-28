@@ -22,6 +22,7 @@
                 <report>1</report>
                 <infrastructure>1</infrastructure>
                 <database>1</database>
+                <catalog_health>1</catalog_health>
             </collectors>
         </magewatch>
     </default>

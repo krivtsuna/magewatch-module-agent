@@ -70,7 +70,7 @@ From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch p
 
 - **Toggle:** Stores → Configuration → MageWatch → Agent → Frontend monitoring (RUM) (default ON).
 - **Keys:** `rum_public_key` is synced automatically via remote config — never paste it manually.
-- **What it collects:** sanitized JS error messages, add-to-cart/checkout/success counters, LCP/CLS/INP — no cookies, no PII, no session IDs.
+- **What it collects:** sanitized JS errors, privacy-safe tab-session funnel stages, safe checkout transport failures, and LCP/CLS/INP. It sets no cookies and collects no customer PII, form values, cart contents, or request/response bodies. Raw tab IDs are short-lived and hashed by MageWatch before storage.
 - **Disable:** set Frontend monitoring to No — removes injection without uninstalling the agent.
 
 ## Security collector (v1.2.0)

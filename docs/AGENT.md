@@ -43,7 +43,7 @@ Envelope (always present):
 
 ```json
 {
-  "agent_version": "1.2.23",
+  "agent_version": "1.2.24",
   "collected_at": "2026-07-03T10:05:00+00:00",
   "health": {
     "status": "healthy|degraded|critical|compromised",
@@ -68,7 +68,7 @@ Envelope (always present):
 
 ### Post-MVP sections (also shipped)
 
-`security` (incl. `content_integrity`, `admin_security`, `config_hygiene` + `status`), `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database`, top-level `health` — validated by the SaaS ingest endpoint.
+`security` (incl. `content_integrity`, `admin_security`, `config_hygiene` + `status`), `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database`, `catalog_health` (buyability aggregates: missing price/image, configurables without options, OOS bestseller SKUs), top-level `health` — validated by the SaaS ingest endpoint.
 
 **Security (1.2.19+):** behaviour-based scan of `core_config_data` HTML paths + CMS for obfuscated JS; admin failed-login / lock / 2FA counts; production config hygiene. Findings send signatures and locations only — never the injected HTML/JS payload.
 

@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.24] - 2026-07-28
+
+### Added
+
+- **Catalog health collector:** aggregate buyability signals for SaaS Product Revenue Leaks — missing price/image counts, configurables without options, and out-of-stock bestseller SKUs (no PII).
+
+[1.2.24]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.24
+
 ## [1.2.23] - 2026-07-27
 
 ### Fixed

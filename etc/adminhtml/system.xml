@@ -108,6 +108,11 @@
                     <comment>MySQL health via SHOW GLOBAL STATUS and long-running InnoDB transactions (read-only).</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="catalog_health" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Catalog Health Collector</label>
+                    <comment>Aggregate buyability signals (missing price/image, configurables without options, OOS bestsellers). SKUs only — no PII.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
             </group>
         </section>
     </system>

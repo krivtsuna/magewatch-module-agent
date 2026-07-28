@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.23';
+    public const AGENT_VERSION = '1.2.24';
 
     public function __construct(
         private readonly Config $config,
@@ -23,8 +23,7 @@ class PayloadBuilder
         private readonly Clock $clock,
         private readonly LoggerInterface $logger,
         private readonly HealthRollup $healthRollup,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -41,7 +40,7 @@ class PayloadBuilder
         foreach ($this->collectorPool->getCollectors() as $collector) {
             $code = $collector->getCode();
 
-            if (!$this->config->isCollectorEnabled($code)) {
+            if (! $this->config->isCollectorEnabled($code)) {
                 continue;
             }
 
