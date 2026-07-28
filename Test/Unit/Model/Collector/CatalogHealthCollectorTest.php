@@ -37,14 +37,17 @@ class CatalogHealthCollectorTest extends TestCase
         $this->assertSame([
             'catalog_health' => [
                 'missing_price' => 0,
+                'missing_price_skus' => [],
                 'missing_image' => 0,
+                'missing_image_skus' => [],
                 'configurables_without_options' => 0,
+                'configurables_without_options_skus' => [],
                 'bestsellers_oos' => [],
             ],
         ], $collector->collect());
     }
 
-    public function test_collect_aggregates_counts(): void
+    public function test_collect_aggregates_counts_and_sample_skus(): void
     {
         $select = $this->createMock(Select::class);
         $select->method('from')->willReturnSelf();
@@ -58,16 +61,17 @@ class CatalogHealthCollectorTest extends TestCase
         $connection = $this->createMock(AdapterInterface::class);
         $connection->method('isTableExists')->willReturn(true);
         $connection->method('select')->willReturn($select);
-        $connection->method('fetchOne')->willReturnOnConsecutiveCalls(
-            75, // price attribute id
-            8,  // missing price
-            3,  // missing image
-            2,  // configurables without options
+        // attribute ids for price/status/visibility/image/status/visibility/status + bestsellers stock query uses fetchCol
+        $connection->method('fetchOne')->willReturn(10);
+        $connection->method('fetchCol')->willReturnOnConsecutiveCalls(
+            ['PRICE-1', 'PRICE-2'],
+            ['IMG-1'],
+            ['CFG-1', 'CFG-2', 'CFG-3'],
+            ['TOP-1'],
         );
         $connection->method('fetchAll')->willReturn([
             ['sku' => 'TOP-1', 'qty_ordered' => 12],
         ]);
-        $connection->method('fetchCol')->willReturn(['TOP-1']);
 
         $resource = $this->createMock(ResourceConnection::class);
         $resource->method('getConnection')->willReturn($connection);
@@ -79,9 +83,12 @@ class CatalogHealthCollectorTest extends TestCase
         $collector = new CatalogHealthCollector($resource, $clock);
         $result = $collector->collect();
 
-        $this->assertSame(8, $result['catalog_health']['missing_price']);
-        $this->assertSame(3, $result['catalog_health']['missing_image']);
-        $this->assertSame(2, $result['catalog_health']['configurables_without_options']);
+        $this->assertSame(2, $result['catalog_health']['missing_price']);
+        $this->assertSame(['PRICE-1', 'PRICE-2'], $result['catalog_health']['missing_price_skus']);
+        $this->assertSame(1, $result['catalog_health']['missing_image']);
+        $this->assertSame(['IMG-1'], $result['catalog_health']['missing_image_skus']);
+        $this->assertSame(3, $result['catalog_health']['configurables_without_options']);
+        $this->assertSame(['CFG-1', 'CFG-2', 'CFG-3'], $result['catalog_health']['configurables_without_options_skus']);
         $this->assertSame([
             ['sku' => 'TOP-1', 'qty_ordered' => 12.0],
         ], $result['catalog_health']['bestsellers_oos']);

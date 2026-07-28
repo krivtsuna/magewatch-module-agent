@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.25] - 2026-07-28
+
+### Fixed
+
+- **Catalog health:** count missing images/prices only for enabled + catalog-visible products (base `image` attribute), and include sample SKUs — avoids false “641 missing images” from disabled / Not Visible Individually children.
+
+[1.2.25]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.25
+
 ## [1.2.24] - 2026-07-28
 
 ### Added
