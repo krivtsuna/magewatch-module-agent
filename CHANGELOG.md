@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.26] - 2026-07-29
+
+### Fixed
+
+- **RUM cache bust (`?v=4`):** load SaaS RUM v1.7 so session funnel stages are not blocked by the 2.5s aggregate fallback race.
+
+[1.2.26]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.26
+
 ## [1.2.25] - 2026-07-28
 
 ### Fixed

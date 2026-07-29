@@ -17,7 +17,7 @@ use Magento\Framework\View\Element\Template\Context;
 class RumSnippet extends Template
 {
     /** Bust CDN/browser caches when the SaaS-hosted RUM script changes. */
-    private const RUM_SCRIPT_VERSION = '3';
+    private const RUM_SCRIPT_VERSION = '4';
 
     public function __construct(
         Context $context,
