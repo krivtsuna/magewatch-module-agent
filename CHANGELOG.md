@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.27] - 2026-08-14
+
+### Added
+
+- **Isolated patch needles:** `security_patch_checks[].marker_contains` verifies unique snippets inside existing Magento files, so monthly isolated patches that only edit vendor (no new marker files) can be proven applied or missing.
+
+[1.2.27]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.27
+
 ## [1.2.26] - 2026-07-29
 
 ### Fixed

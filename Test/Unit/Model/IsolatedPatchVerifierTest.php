@@ -79,6 +79,59 @@ class IsolatedPatchVerifierTest extends TestCase
         $this->assertSame([], $results);
     }
 
+    public function testDetectsAppliedPatchWhenMarkerNeedlesArePresent(): void
+    {
+        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
+        mkdir($root . '/vendor/magento/module-customer/Controller/Account', 0777, true);
+        file_put_contents(
+            $root . '/vendor/magento/module-customer/Controller/Account/Edit.php',
+            "<?php\n\$data = array_intersect_key(\$data, \$customerForm->getAllowedAttributes());\nEditPost::FORM_DATA_EXTRACTOR_CODE;\n"
+        );
+
+        $results = $this->verifier->verify($root, '2.4.8-p5', [[
+            'patch_id' => '248p5-2026-08-001-CE',
+            'bulletin_id' => 'APSB26-92',
+            'isolated_base' => '2.4.8-p5',
+            'marker_files' => [],
+            'marker_contains' => [[
+                'path' => 'vendor/magento/module-customer/Controller/Account/Edit.php',
+                'contains' => 'EditPost::FORM_DATA_EXTRACTOR_CODE',
+            ]],
+        ]]);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('applied', $results[0]['status']);
+        $this->assertSame([], $results[0]['missing']);
+
+        $this->removeDir($root);
+    }
+
+    public function testDetectsMissingPatchWhenMarkerNeedleAbsent(): void
+    {
+        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
+        mkdir($root . '/vendor/magento/module-customer/Controller/Account', 0777, true);
+        file_put_contents(
+            $root . '/vendor/magento/module-customer/Controller/Account/Edit.php',
+            "<?php\nclass Edit {}\n"
+        );
+
+        $results = $this->verifier->verify($root, '2.4.8-p5', [[
+            'patch_id' => '248p5-2026-08-001-CE',
+            'bulletin_id' => 'APSB26-92',
+            'isolated_base' => '2.4.8-p5',
+            'marker_files' => [],
+            'marker_contains' => [[
+                'path' => 'vendor/magento/module-customer/Controller/Account/Edit.php',
+                'contains' => 'EditPost::FORM_DATA_EXTRACTOR_CODE',
+            ]],
+        ]]);
+
+        $this->assertCount(1, $results);
+        $this->assertSame('missing', $results[0]['status']);
+
+        $this->removeDir($root);
+    }
+
     private function removeDir(string $dir): void
     {
         if (! is_dir($dir)) {
