@@ -6,6 +6,7 @@ namespace MageWatch\Agent\Test\Unit\Model;
 
 use MageWatch\Agent\Api\CollectorInterface;
 use MageWatch\Agent\Model\Clock;
+use MageWatch\Agent\Model\CollectorCadence;
 use MageWatch\Agent\Model\CollectorPool;
 use MageWatch\Agent\Model\CollectorResultCache;
 use MageWatch\Agent\Model\Config;
@@ -162,6 +163,7 @@ class PayloadBuilderTest extends TestCase
             $this->logger,
             new HealthRollup,
             $cache,
+            new CollectorCadence,
         );
     }
 

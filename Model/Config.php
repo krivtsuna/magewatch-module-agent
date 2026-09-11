@@ -6,6 +6,7 @@ namespace MageWatch\Agent\Model;
 
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
 
 /**
  * Typed reader over MageWatch Agent system.xml configuration.
@@ -162,7 +163,7 @@ class Config
 
     public function isCookieRestrictionModeEnabled(): bool
     {
-        return $this->scopeConfig->isSetFlag(self::XML_PATH_COOKIE_RESTRICTION, ScopeConfigInterface::SCOPE_TYPE_STORE);
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_COOKIE_RESTRICTION, ScopeInterface::SCOPE_STORE);
     }
 
     public function getRumPublicKey(): ?string

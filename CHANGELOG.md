@@ -3,6 +3,15 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.32] - 2026-09-11
+
+### Fixed
+
+- **Compiled DI:** `PayloadBuilder` no longer defaults `CollectorCadence` with `new`. Magento `setup:di:compile` was `var_export`ing that instance and calling missing `__set_state()`, which fataled storefront, admin, and `bin/magento`. Cadence is injected; `__set_state()` is also present as a safety net. TTL unchanged.
+- **Cookie restriction:** `isCookieRestrictionModeEnabled()` reads store scope via `Magento\Store\Model\ScopeInterface::SCOPE_STORE`. `ScopeConfigInterface::SCOPE_TYPE_STORE` does not exist and fatals the storefront.
+
+[1.2.32]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.32
+
 ## [1.2.31] - 2026-09-11
 
 ### Changed

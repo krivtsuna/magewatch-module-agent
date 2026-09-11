@@ -33,4 +33,14 @@ class CollectorCadence
 
         return $minutes > 0 ? $minutes * 60 : 0;
     }
+
+    /**
+     * Magento compiled DI serializes this via var_export().
+     *
+     * @param array<string, mixed> $properties
+     */
+    public static function __set_state(array $properties): self
+    {
+        return new self();
+    }
 }

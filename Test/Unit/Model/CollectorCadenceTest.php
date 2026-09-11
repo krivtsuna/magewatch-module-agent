@@ -20,4 +20,13 @@ class CollectorCadenceTest extends TestCase
         $this->assertSame(0, $cadence->ttlSeconds('security'));
         $this->assertSame(0, $cadence->ttlSeconds('indexer'));
     }
+
+    public function test_set_state_rebuilds_an_instance_for_compiled_di(): void
+    {
+        $fromExport = CollectorCadence::__set_state([]);
+
+        $this->assertInstanceOf(CollectorCadence::class, $fromExport);
+        $this->assertSame(3600, $fromExport->ttlSeconds('catalog_health'));
+        $this->assertSame(0, $fromExport->ttlSeconds('cron'));
+    }
 }

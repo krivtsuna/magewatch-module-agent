@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.31';
+    public const AGENT_VERSION = '1.2.32';
 
     public function __construct(
         private readonly Config $config,
@@ -24,7 +24,7 @@ class PayloadBuilder
         private readonly LoggerInterface $logger,
         private readonly HealthRollup $healthRollup,
         private readonly CollectorResultCache $collectorResultCache,
-        private readonly CollectorCadence $collectorCadence = new CollectorCadence,
+        private readonly CollectorCadence $collectorCadence,
     ) {}
 
     /**
