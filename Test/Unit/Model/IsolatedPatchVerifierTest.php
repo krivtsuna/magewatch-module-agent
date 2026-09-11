@@ -13,17 +13,17 @@ class IsolatedPatchVerifierTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->verifier = new IsolatedPatchVerifier();
+        $this->verifier = new IsolatedPatchVerifier;
     }
 
-    public function testDetectsAppliedPatchWhenAllMarkerFilesExist(): void
+    public function test_detects_applied_patch_when_all_marker_files_exist(): void
     {
-        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
-        mkdir($root . '/vendor/magento/module-quote/Model/GuestCart', 0777, true);
-        mkdir($root . '/vendor/magento/module-catalog-url-rewrite-graph-ql/Plugin/Model/Resolver', 0777, true);
-        file_put_contents($root . '/vendor/magento/module-quote/Model/GuestCart/GetGuestCart.php', '<?php');
+        $root = sys_get_temp_dir().'/mw-patch-'.uniqid('', true);
+        mkdir($root.'/vendor/magento/module-quote/Model/GuestCart', 0777, true);
+        mkdir($root.'/vendor/magento/module-catalog-url-rewrite-graph-ql/Plugin/Model/Resolver', 0777, true);
+        file_put_contents($root.'/vendor/magento/module-quote/Model/GuestCart/GetGuestCart.php', '<?php');
         file_put_contents(
-            $root . '/vendor/magento/module-catalog-url-rewrite-graph-ql/Plugin/Model/Resolver/EntityUrlExcludeDisabledProductPlugin.php',
+            $root.'/vendor/magento/module-catalog-url-rewrite-graph-ql/Plugin/Model/Resolver/EntityUrlExcludeDisabledProductPlugin.php',
             '<?php'
         );
 
@@ -45,9 +45,9 @@ class IsolatedPatchVerifierTest extends TestCase
         $this->removeDir($root);
     }
 
-    public function testDetectsMissingPatchWhenMarkerFilesAbsent(): void
+    public function test_detects_missing_patch_when_marker_files_absent(): void
     {
-        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
+        $root = sys_get_temp_dir().'/mw-patch-'.uniqid('', true);
         mkdir($root, 0777, true);
 
         $results = $this->verifier->verify($root, '2.4.7-p10', [[
@@ -65,7 +65,7 @@ class IsolatedPatchVerifierTest extends TestCase
         $this->removeDir($root);
     }
 
-    public function testSkipsChecksForOtherMagentoVersions(): void
+    public function test_skips_checks_for_other_magento_versions(): void
     {
         $results = $this->verifier->verify(sys_get_temp_dir(), '2.4.8-p5', [[
             'patch_id' => '247p10-2026-07-001-CE',
@@ -79,12 +79,12 @@ class IsolatedPatchVerifierTest extends TestCase
         $this->assertSame([], $results);
     }
 
-    public function testDetectsAppliedPatchWhenMarkerNeedlesArePresent(): void
+    public function test_detects_applied_patch_when_marker_needles_are_present(): void
     {
-        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
-        mkdir($root . '/vendor/magento/module-customer/Controller/Account', 0777, true);
+        $root = sys_get_temp_dir().'/mw-patch-'.uniqid('', true);
+        mkdir($root.'/vendor/magento/module-customer/Controller/Account', 0777, true);
         file_put_contents(
-            $root . '/vendor/magento/module-customer/Controller/Account/Edit.php',
+            $root.'/vendor/magento/module-customer/Controller/Account/Edit.php',
             "<?php\n\$data = array_intersect_key(\$data, \$customerForm->getAllowedAttributes());\nEditPost::FORM_DATA_EXTRACTOR_CODE;\n"
         );
 
@@ -106,12 +106,12 @@ class IsolatedPatchVerifierTest extends TestCase
         $this->removeDir($root);
     }
 
-    public function testDetectsMissingPatchWhenMarkerNeedleAbsent(): void
+    public function test_detects_missing_patch_when_marker_needle_absent(): void
     {
-        $root = sys_get_temp_dir() . '/mw-patch-' . uniqid('', true);
-        mkdir($root . '/vendor/magento/module-customer/Controller/Account', 0777, true);
+        $root = sys_get_temp_dir().'/mw-patch-'.uniqid('', true);
+        mkdir($root.'/vendor/magento/module-customer/Controller/Account', 0777, true);
         file_put_contents(
-            $root . '/vendor/magento/module-customer/Controller/Account/Edit.php',
+            $root.'/vendor/magento/module-customer/Controller/Account/Edit.php',
             "<?php\nclass Edit {}\n"
         );
 
@@ -148,7 +148,7 @@ class IsolatedPatchVerifierTest extends TestCase
                 continue;
             }
 
-            $path = $dir . '/' . $item;
+            $path = $dir.'/'.$item;
             if (is_dir($path)) {
                 $this->removeDir($path);
             } else {

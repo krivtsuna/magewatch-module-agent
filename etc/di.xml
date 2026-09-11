@@ -74,7 +74,21 @@
                 <item name="infrastructure" xsi:type="object">MageWatch\Agent\Model\Collector\InfrastructureCollector</item>
                 <item name="database" xsi:type="object">MageWatch\Agent\Model\Collector\DatabaseCollector</item>
                 <item name="catalog_health" xsi:type="object">MageWatch\Agent\Model\Collector\CatalogHealthCollector</item>
+                <item name="order_attribution" xsi:type="object">MageWatch\Agent\Model\Collector\OrderAttributionCollector</item>
+                <item name="fulfillment" xsi:type="object">MageWatch\Agent\Model\Collector\FulfillmentTrackCollector</item>
             </argument>
+        </arguments>
+    </type>
+
+    <type name="MageWatch\Agent\Observer\RecordOrderAttribution">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
+        </arguments>
+    </type>
+
+    <type name="MageWatch\Agent\Model\Attribution\OrderAttributionRecorder">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageWatch\Agent\Logger\Logger</argument>
         </arguments>
     </type>
 

@@ -9,6 +9,7 @@ use MageWatch\Agent\Model\Clock;
 use MageWatch\Agent\Model\Config;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Sql\Expression;
 
 /**
@@ -191,7 +192,7 @@ class CronCollector implements CollectorInterface
     ): array {
         $groups = [];
 
-        foreach ($this->discoverGroups($connection, $table) as $group) {
+        foreach ($this->discoverGroups() as $group) {
             $groups[$group] = [
                 'group' => $group,
                 'last_success_at' => $this->getLastSuccessAtForGroup($connection, $table, $group),
@@ -220,21 +221,14 @@ class CronCollector implements CollectorInterface
     }
 
     /**
+     * resolveGroup() only ever returns these three names — no need to DISTINCT
+     * job_code on a bloated cron_schedule.
+     *
      * @return list<string>
      */
-    private function discoverGroups(AdapterInterface $connection, string $table): array
+    private function discoverGroups(): array
     {
-        $select = $connection->select()
-            ->from($table, ['job_code'])
-            ->distinct(true)
-            ->limit(500);
-
-        $groups = ['default', 'index', 'magewatch'];
-        foreach ($connection->fetchCol($select) as $jobCode) {
-            $groups[] = $this->resolveGroup((string) $jobCode);
-        }
-
-        return array_values(array_unique($groups));
+        return ['default', 'index', 'magewatch'];
     }
 
     private function resolveGroup(string $jobCode): string
@@ -260,23 +254,59 @@ class CronCollector implements CollectorInterface
     private function getLastSuccessAtForGroup(AdapterInterface $connection, string $table, string $group): ?string
     {
         $select = $connection->select()
-            ->from($table, ['job_code', 'finished_at'])
+            ->from($table, ['last' => new Expression('MAX(finished_at)')])
             ->where('status = ?', self::STATUS_SUCCESS)
-            ->where('finished_at IS NOT NULL')
-            ->order('finished_at DESC')
-            ->limit(2000);
+            ->where('finished_at IS NOT NULL');
 
-        foreach ($connection->fetchAll($select) as $row) {
-            if ($this->resolveGroup((string) $row['job_code']) === $group) {
-                return $this->formatDate((string) $row['finished_at']);
-            }
+        $this->applyGroupFilter($select, $group);
+
+        $value = $connection->fetchOne($select);
+
+        return $value ? $this->formatDate((string) $value) : null;
+    }
+
+    private function applyGroupFilter(Select $select, string $group): void
+    {
+        if ($group === 'magewatch') {
+            $select->where("job_code LIKE 'magewatch_%' OR job_code = ''");
+
+            return;
         }
 
-        return null;
+        if ($group === 'index') {
+            $select->where(
+                "job_code LIKE '%indexer%'"
+                ." OR job_code LIKE 'catalog_product_%'"
+                ." OR job_code LIKE 'catalogsearch_%'"
+                ." OR job_code LIKE 'inventory_%'"
+            );
+
+            return;
+        }
+
+        $select->where(
+            "job_code NOT LIKE 'magewatch_%'"
+            ." AND job_code != ''"
+            ." AND job_code NOT LIKE '%indexer%'"
+            ." AND job_code NOT LIKE 'catalog_product_%'"
+            ." AND job_code NOT LIKE 'catalogsearch_%'"
+            ." AND job_code NOT LIKE 'inventory_%'"
+        );
     }
 
     private function getScheduleRowCount(AdapterInterface $connection, string $table): int
     {
+        try {
+            $estimate = $connection->fetchOne(
+                'SELECT TABLE_ROWS FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+                [$table]
+            );
+            if ($estimate !== false && $estimate !== null && $estimate !== '') {
+                return (int) $estimate;
+            }
+        } catch (\Throwable) {
+        }
+
         $select = $connection->select()->from($table, ['cnt' => new Expression('COUNT(*)')]);
 
         return (int) $connection->fetchOne($select);

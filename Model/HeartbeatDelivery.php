@@ -99,7 +99,7 @@ class HeartbeatDelivery
 
     private function deliverFull(bool $syncOnConnect): bool
     {
-        $payload = $this->payloadBuilder->build();
+        $payload = $this->payloadBuilder->build($syncOnConnect);
         if ($syncOnConnect) {
             $payload['sync_on_connect'] = true;
         }

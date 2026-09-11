@@ -29,8 +29,8 @@ The MageWatch agent runs inside your Magento store. It does not modify catalog, 
 
 ## What it does NOT do
 
-- **Never modifies** catalog, sales, or customer tables — collectors are read-only with respect to store data (the agent may write its own operational state such as log offsets).
-- **No customer PII** — order data is hourly aggregates only (counts and revenue buckets), not individual orders or buyer details.
+- **Never modifies** catalog, sales, or customer tables — collectors are read-only with respect to store data (the agent may write its own operational state: log offsets and `magewatch_order_attribution` rows).
+- **No customer PII** — no names, emails, phones, or addresses. Campaigns stay aggregated. Fulfillment sends increment ID, tracking number, carrier title, and order total so the dashboard can poll the real carrier.
 - **No remote code execution** — the agent only pushes JSON over HTTPS to your MageWatch ingest endpoint. There is no inbound control channel.
 - **Open source** — every collector is plain PHP under `Model/Collector/`. Inspect the code before you install on production.
 
@@ -72,6 +72,17 @@ From **v1.1.0**, the agent can inject a tiny storefront script (paid MageWatch p
 - **Keys:** `rum_public_key` is synced automatically via remote config — never paste it manually.
 - **What it collects:** sanitized JS errors, privacy-safe tab-session funnel stages, safe checkout transport failures, and LCP/CLS/INP. It sets no cookies and collects no customer PII, form values, cart contents, or request/response bodies. Raw tab IDs are short-lived and hashed by MageWatch before storage.
 - **Disable:** set Frontend monitoring to No — removes injection without uninstalling the agent.
+
+## Order campaign attribution (v1.2.28)
+
+The agent can remember which campaign a shopper came from and attach that to the order.
+
+Landing tags never reach PHP on a default Magento + Varnish setup (the VCL strips `utm_*` / `gclid` / `fbclid`, and FPC often skips PHP on the first hit). So capture is a small **first-party cookie** (`mw_attr`), separate from RUM. RUM stays cookieless; this script only runs when attribution is enabled.
+
+- **Toggle:** Stores → Configuration → MageWatch → Agent → Order campaign attribution (default ON, 30-day window).
+- **What is stored in Magento:** one row per order with first-touch and last-touch source/medium/campaign (plus referrer host and click id). Checkout cannot fail if attribution fails.
+- **What is sent to MageWatch:** 7-day aggregates only — orders and base-currency revenue by day × source/medium/campaign. No order numbers, no click IDs.
+- **Consent:** respects Magento cookie restriction mode, Global Privacy Control, Cookiebot and OneTrust. No cookie → no row (that is not counted as `(direct)`).
 
 ## Security collector (v1.2.0)
 

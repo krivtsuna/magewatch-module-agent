@@ -61,6 +61,22 @@ class PubPhpIntegrityCheckerTest extends TestCase
         $this->assertSame([], $result['core_pub_php_modified']);
     }
 
+    public function test_media_wysiwyg_php_is_unexpected_but_product_tree_is_skipped(): void
+    {
+        mkdir($this->root.'/pub/media/wysiwyg', 0777, true);
+        mkdir($this->root.'/pub/media/catalog/product/cache', 0777, true);
+        file_put_contents($this->root.'/pub/media/wysiwyg/drop.php', "<?php\n");
+        file_put_contents($this->root.'/pub/media/shell.php', "<?php\n");
+        file_put_contents($this->root.'/pub/media/catalog/product/cache/hidden.php', "<?php\n");
+
+        $result = $this->checker->scan($this->root.'/pub', $this->root);
+
+        $this->assertEqualsCanonicalizing(
+            ['pub/media/wysiwyg/drop.php', 'pub/media/shell.php'],
+            $result['unexpected_pub_php']
+        );
+    }
+
     private function removeDir(string $dir): void
     {
         if (! is_dir($dir)) {

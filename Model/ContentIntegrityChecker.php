@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MageWatch\Agent\Model;
 
+use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Throwable;
@@ -57,8 +58,16 @@ class ContentIntegrityChecker
 
     private const MAX_FINDINGS_REPORTED = 50;
 
+    private const CMS_CACHE_KEY = 'magewatch_cms_integrity';
+
+    private const CMS_CACHE_TTL = 3600;
+
+    private const CMS_INCREMENTAL_HOURS = 2;
+
     public function __construct(
         private readonly ResourceConnection $resourceConnection,
+        private readonly Clock $clock,
+        private readonly CacheInterface $cache,
     ) {
     }
 
@@ -87,7 +96,7 @@ class ContentIntegrityChecker
                 $compromised = $compromised || $finding['severity'] === HealthStatus::COMPROMISED;
             }
 
-            [$cmsFindings, $cmsCompromised, $cmsTruncated] = $this->scanCmsTables($connection, $allowlist);
+            [$cmsFindings, $cmsCompromised, $cmsTruncated] = $this->scanCms($connection, $allowlist);
             $findings = array_merge($findings, $cmsFindings);
             $compromised = $compromised || $cmsCompromised;
             $truncated = $truncated || $cmsTruncated;
@@ -155,10 +164,93 @@ class ContentIntegrityChecker
     }
 
     /**
+     * Full CMS walk at most once an hour. Every heartbeat also rescans rows
+     * updated in the last two hours so a fresh Magecart drop is not delayed.
+     *
      * @param  list<string>  $allowlist
      * @return array{0: list<array<string, mixed>>, 1: bool, 2: bool}
      */
-    private function scanCmsTables(AdapterInterface $connection, array $allowlist): array
+    private function scanCms(AdapterInterface $connection, array $allowlist): array
+    {
+        $cached = $this->loadCachedCmsScan();
+        if ($cached === null) {
+            $fresh = $this->scanCmsTables($connection, $allowlist, null);
+            $this->saveCachedCmsScan($fresh);
+
+            return [$fresh['findings'], $fresh['compromised'], $fresh['truncated']];
+        }
+
+        $since = $this->clock->now()
+            ->modify(sprintf('-%d hours', self::CMS_INCREMENTAL_HOURS))
+            ->format('Y-m-d H:i:s');
+        $incremental = $this->scanCmsTables($connection, $allowlist, $since);
+
+        return $this->mergeCmsScans($cached, $incremental);
+    }
+
+    /**
+     * @return array{findings: list<array<string, mixed>>, compromised: bool, truncated: bool}|null
+     */
+    private function loadCachedCmsScan(): ?array
+    {
+        $raw = $this->cache->load(self::CMS_CACHE_KEY);
+        if (! is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded) || ! isset($decoded['findings']) || ! is_array($decoded['findings'])) {
+            return null;
+        }
+
+        return [
+            'findings' => $decoded['findings'],
+            'compromised' => (bool) ($decoded['compromised'] ?? false),
+            'truncated' => (bool) ($decoded['truncated'] ?? false),
+        ];
+    }
+
+    /**
+     * @param  array{findings: list<array<string, mixed>>, compromised: bool, truncated: bool}  $scan
+     */
+    private function saveCachedCmsScan(array $scan): void
+    {
+        $this->cache->save(
+            (string) json_encode($scan),
+            self::CMS_CACHE_KEY,
+            ['MAGEWATCH'],
+            self::CMS_CACHE_TTL
+        );
+    }
+
+    /**
+     * @param  array{findings: list<array<string, mixed>>, compromised: bool, truncated: bool}  $cached
+     * @param  array{findings: list<array<string, mixed>>, compromised: bool, truncated: bool}  $incremental
+     * @return array{0: list<array<string, mixed>>, 1: bool, 2: bool}
+     */
+    private function mergeCmsScans(array $cached, array $incremental): array
+    {
+        $byKey = [];
+        foreach (array_merge($cached['findings'], $incremental['findings']) as $finding) {
+            if (! is_array($finding)) {
+                continue;
+            }
+            $key = ($finding['source'] ?? '').':'.($finding['row_id'] ?? '').':'.($finding['identifier'] ?? '');
+            $byKey[$key] = $finding;
+        }
+
+        return [
+            array_values($byKey),
+            $cached['compromised'] || $incremental['compromised'],
+            $cached['truncated'] || $incremental['truncated'],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $allowlist
+     * @return array{findings: list<array<string, mixed>>, compromised: bool, truncated: bool}
+     */
+    private function scanCmsTables(AdapterInterface $connection, array $allowlist, ?string $updatedSince): array
     {
         $findings = [];
         $compromised = false;
@@ -175,9 +267,11 @@ class ContentIntegrityChecker
                 continue;
             }
 
-            $total = (int) $connection->fetchOne("SELECT COUNT(*) FROM {$table}");
-            if ($total > self::CMS_SCAN_LIMIT) {
-                $truncated = true;
+            if ($updatedSince === null) {
+                $total = (int) $connection->fetchOne("SELECT COUNT(*) FROM {$table}");
+                if ($total > self::CMS_SCAN_LIMIT) {
+                    $truncated = true;
+                }
             }
 
             $select = $connection->select()
@@ -185,6 +279,10 @@ class ContentIntegrityChecker
                 ->where('content IS NOT NULL')
                 ->where("content != ''")
                 ->limit(self::CMS_SCAN_LIMIT);
+
+            if ($updatedSince !== null) {
+                $select->where('update_time >= ?', $updatedSince);
+            }
 
             foreach ($connection->fetchAll($select) as $row) {
                 $hit = $this->scanValue((string) $row['content'], $allowlist);
@@ -200,7 +298,11 @@ class ContentIntegrityChecker
             }
         }
 
-        return [$findings, $compromised, $truncated];
+        return [
+            'findings' => $findings,
+            'compromised' => $compromised,
+            'truncated' => $truncated,
+        ];
     }
 
     /**

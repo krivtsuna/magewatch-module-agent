@@ -15,7 +15,7 @@ use Throwable;
  */
 class PayloadBuilder
 {
-    public const AGENT_VERSION = '1.2.27';
+    public const AGENT_VERSION = '1.2.31';
 
     public function __construct(
         private readonly Config $config,
@@ -23,12 +23,14 @@ class PayloadBuilder
         private readonly Clock $clock,
         private readonly LoggerInterface $logger,
         private readonly HealthRollup $healthRollup,
+        private readonly CollectorResultCache $collectorResultCache,
+        private readonly CollectorCadence $collectorCadence = new CollectorCadence,
     ) {}
 
     /**
      * @return array<string, mixed>
      */
-    public function build(): array
+    public function build(bool $forceRefresh = false): array
     {
         $payload = [
             'agent_version' => self::AGENT_VERSION,
@@ -45,7 +47,13 @@ class PayloadBuilder
             }
 
             try {
-                $result = $collector->collect();
+                $ttl = $this->collectorCadence->ttlSeconds($code);
+                $result = $this->collectorResultCache->remember(
+                    $code,
+                    $ttl,
+                    static fn (): array => $collector->collect(),
+                    $forceRefresh,
+                );
                 $payload = array_merge($payload, $result);
             } catch (Throwable $e) {
                 $message = sprintf('%s: %s', $code, $e->getMessage());

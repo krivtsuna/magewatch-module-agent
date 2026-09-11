@@ -14,6 +14,7 @@ packages/magewatch-module-agent/
 ├── Cron/HeartbeatPing.php              # Lightweight minute ping (fail-safe)
 ├── Logger/                             # var/log/magewatch.log
 ├── Model/
+│   ├── Attribution/                    # Cookie parse + UTM/click-id normalizer + order writer
 │   ├── Collector/                      # One class per metric domain
 │   ├── ContentIntegrityChecker.php     # DB HTML / CMS Magecart-style scan
 │   ├── AdminSecurityChecker.php        # Failed logins, locks, 2FA
@@ -33,8 +34,12 @@ packages/magewatch-module-agent/
 │   ├── adminhtml/system.xml            # Admin UI fields
 │   ├── acl.xml
 │   ├── di.xml                          # Collector registration
-│   └── db_schema.xml                   # magewatch_log_offset table
-└── view/adminhtml/                     # Test ping template + JS
+│   ├── events.xml                      # checkout_submit_all_after → attribution writer
+│   └── db_schema.xml                   # magewatch_log_offset + magewatch_order_attribution
+├── Observer/                           # RecordOrderAttribution
+└── view/
+    ├── adminhtml/                      # Test ping template + JS
+    └── frontend/                       # RUM loader + attribution.js cookie capture
 ```
 
 ## Payload schema
@@ -43,7 +48,7 @@ Envelope (always present):
 
 ```json
 {
-  "agent_version": "1.2.25",
+  "agent_version": "1.2.28",
   "collected_at": "2026-07-03T10:05:00+00:00",
   "health": {
     "status": "healthy|degraded|critical|compromised",
@@ -68,7 +73,7 @@ Envelope (always present):
 
 ### Post-MVP sections (also shipped)
 
-`security` (incl. `content_integrity`, `admin_security`, `config_hygiene` + `status`), `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database`, `catalog_health` (buyability aggregates: missing price/image, configurables without options, OOS bestseller SKUs), top-level `health` — validated by the SaaS ingest endpoint.
+`security` (incl. `content_integrity`, `admin_security`, `config_hygiene` + `status`), `composer` / `modules`, `storefront_probe`, `reports`, `infrastructure`, `database`, `catalog_health` (buyability aggregates: missing price/image, configurables without options, OOS bestseller SKUs), `order_attribution` (7-day campaign aggregates: day × source/medium/campaign → orders + revenue), `fulfillment` (open Magento shipment tracks: increment ID + tracking number + carrier title + order total — no customer PII, no Packlink), top-level `health` — validated by the SaaS ingest endpoint.
 
 **Security (1.2.19+):** behaviour-based scan of `core_config_data` HTML paths + CMS for obfuscated JS; admin failed-login / lock / 2FA counts; production config hygiene. Findings send signatures and locations only — never the injected HTML/JS payload.
 
@@ -86,6 +91,8 @@ Envelope (always present):
 | API endpoint URL | `magewatch/agent/endpoint_url` | HTTPS ingest URL |
 | Site token | `magewatch/agent/site_token` | Encrypted; Bearer header |
 | Stuck cron threshold | `magewatch/agent/stuck_cron_threshold_minutes` | Default 30 |
+| Attribution enabled | `magewatch/attribution/enabled` | Storefront cookie + order observer (1.2.28+) |
+| Attribution window | `magewatch/attribution/window_days` | Cookie lifetime, default 30 |
 | Per-collector toggles | `magewatch/collectors/*` | Each collector can be disabled |
 | Send test ping | Admin button | Connectivity check + immediate full snapshot (1.2.19+) |
 

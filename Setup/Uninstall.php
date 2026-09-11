@@ -9,17 +9,26 @@ use Magento\Framework\Setup\SchemaSetupInterface;
 use Magento\Framework\Setup\UninstallInterface;
 
 /**
- * Drops the module's own operational table on `bin/magento module:uninstall`.
+ * Drops the module's own operational tables on `bin/magento module:uninstall`.
  *
  * This never touches catalog/sales/customer data - only the internal
- * magewatch_log_offset bookkeeping table created by this module.
+ * bookkeeping tables created by this module.
  */
 class Uninstall implements UninstallInterface
 {
+    private const TABLES = [
+        'magewatch_log_offset',
+        'magewatch_order_attribution',
+    ];
+
     public function uninstall(SchemaSetupInterface $setup, ModuleContextInterface $context): void
     {
         $setup->startSetup();
-        $setup->getConnection()->dropTable($setup->getTable('magewatch_log_offset'));
+
+        foreach (self::TABLES as $table) {
+            $setup->getConnection()->dropTable($setup->getTable($table));
+        }
+
         $setup->endSetup();
     }
 }

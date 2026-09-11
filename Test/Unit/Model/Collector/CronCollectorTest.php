@@ -79,13 +79,12 @@ class CronCollectorTest extends TestCase
                     'cnt' => '1',
                 ],
             ],
-            // last success per group (ignored empty)
-            [],
-            [],
-            [],
         );
 
         $this->connection->method('fetchOne')->willReturnOnConsecutiveCalls(
+            '2026-07-03 09:50:00',
+            '2026-07-03 09:40:00',
+            '2026-07-03 10:00:00',
             '48211',
             '2026-07-03 10:04:00'
         );
@@ -109,13 +108,21 @@ class CronCollectorTest extends TestCase
         );
         $this->assertSame(48211, $result['cron']['schedule_rows']);
         $this->assertSame('2026-07-03T10:04:00+00:00', $result['cron']['last_success_at']);
-        $this->assertArrayHasKey('groups', $result['cron']);
+        $this->assertSame('2026-07-03T09:50:00+00:00', $result['cron']['groups'][0]['last_success_at']);
+        $this->assertSame('default', $result['cron']['groups'][0]['group']);
+        $this->assertCount(3, $result['cron']['groups']);
     }
 
     public function testCollectHandlesNoSuccessfulRuns(): void
     {
         $this->connection->method('fetchAll')->willReturn([]);
-        $this->connection->method('fetchOne')->willReturnOnConsecutiveCalls('0', false);
+        $this->connection->method('fetchOne')->willReturnOnConsecutiveCalls(
+            false,
+            false,
+            false,
+            '0',
+            false
+        );
 
         $result = $this->collector->collect();
 

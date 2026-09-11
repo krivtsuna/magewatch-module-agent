@@ -8,4 +8,37 @@
             <column name="file_path"/>
         </constraint>
     </table>
+    <!--
+        One row per order describing where the shopper came from. No foreign key
+        to sales_order on purpose: the module must never make setup:upgrade fail
+        on unusual sales-resource setups, and orphan rows stay invisible because
+        every read joins sales_order anyway.
+    -->
+    <table name="magewatch_order_attribution" resource="default" engine="innodb" comment="MageWatch Order Campaign Attribution">
+        <column xsi:type="int" name="order_id" unsigned="true" nullable="false" comment="sales_order.entity_id"/>
+        <column xsi:type="varchar" name="increment_id" nullable="true" length="50" comment="Order Increment ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0" comment="Store ID"/>
+        <column xsi:type="varchar" name="first_source" nullable="false" length="100" comment="First Touch Source"/>
+        <column xsi:type="varchar" name="first_medium" nullable="false" length="100" comment="First Touch Medium"/>
+        <column xsi:type="varchar" name="first_campaign" nullable="false" length="255" comment="First Touch Campaign"/>
+        <column xsi:type="varchar" name="first_term" nullable="true" length="255" comment="First Touch Term"/>
+        <column xsi:type="varchar" name="first_content" nullable="true" length="255" comment="First Touch Content"/>
+        <column xsi:type="varchar" name="first_referrer_host" nullable="true" length="128" comment="First Touch Referrer Host"/>
+        <column xsi:type="varchar" name="first_landing_path" nullable="true" length="255" comment="First Touch Landing Path"/>
+        <column xsi:type="datetime" name="first_touch_at" nullable="true" comment="First Touch At"/>
+        <column xsi:type="varchar" name="last_source" nullable="false" length="100" comment="Last Touch Source"/>
+        <column xsi:type="varchar" name="last_medium" nullable="false" length="100" comment="Last Touch Medium"/>
+        <column xsi:type="varchar" name="last_campaign" nullable="false" length="255" comment="Last Touch Campaign"/>
+        <column xsi:type="varchar" name="last_term" nullable="true" length="255" comment="Last Touch Term"/>
+        <column xsi:type="varchar" name="last_content" nullable="true" length="255" comment="Last Touch Content"/>
+        <column xsi:type="varchar" name="last_referrer_host" nullable="true" length="128" comment="Last Touch Referrer Host"/>
+        <column xsi:type="varchar" name="last_landing_path" nullable="true" length="255" comment="Last Touch Landing Path"/>
+        <column xsi:type="datetime" name="last_touch_at" nullable="true" comment="Last Touch At"/>
+        <column xsi:type="varchar" name="click_id_type" nullable="true" length="20" comment="Last Touch Click ID Parameter"/>
+        <column xsi:type="varchar" name="click_id" nullable="true" length="255" comment="Last Touch Click ID Value"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Recorded At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="order_id"/>
+        </constraint>
+    </table>
 </schema>

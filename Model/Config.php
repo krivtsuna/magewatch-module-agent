@@ -13,23 +13,36 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 class Config
 {
     private const XML_PATH_ENABLED = 'magewatch/agent/enabled';
+
     private const XML_PATH_ENDPOINT_URL = 'magewatch/agent/endpoint_url';
+
     private const XML_PATH_SITE_TOKEN = 'magewatch/agent/site_token';
+
     private const XML_PATH_STUCK_CRON_THRESHOLD_MINUTES = 'magewatch/agent/stuck_cron_threshold_minutes';
 
     private const XML_PATH_COLLECTOR_PREFIX = 'magewatch/collectors/';
 
     private const XML_PATH_RUM_ENABLED = 'magewatch/agent/rum_enabled';
 
+    private const XML_PATH_ATTRIBUTION_ENABLED = 'magewatch/attribution/enabled';
+
+    private const XML_PATH_ATTRIBUTION_WINDOW_DAYS = 'magewatch/attribution/window_days';
+
+    /** Magento\Cookie\Helper\Cookie::XML_PATH_COOKIE_RESTRICTION, read by path to avoid a module dependency. */
+    private const XML_PATH_COOKIE_RESTRICTION = 'web/cookie/cookie_restriction_enabled';
+
     private const REMOTE_CONFIG_CACHE_KEY = 'magewatch_remote_config';
 
     private const DEFAULT_STUCK_CRON_THRESHOLD_MINUTES = 30;
 
+    private const DEFAULT_ATTRIBUTION_WINDOW_DAYS = 30;
+
+    private const MAX_ATTRIBUTION_WINDOW_DAYS = 365;
+
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
         private readonly CacheInterface $cache
-    ) {
-    }
+    ) {}
 
     public function isEnabled(): bool
     {
@@ -93,14 +106,14 @@ class Config
         }
 
         return $this->scopeConfig->isSetFlag(
-            self::XML_PATH_COLLECTOR_PREFIX . $collectorCode,
+            self::XML_PATH_COLLECTOR_PREFIX.$collectorCode,
             ScopeConfigInterface::SCOPE_TYPE_DEFAULT
         );
     }
 
     public function isRumEnabled(): bool
     {
-        if (!$this->scopeConfig->isSetFlag(self::XML_PATH_RUM_ENABLED, ScopeConfigInterface::SCOPE_TYPE_DEFAULT)) {
+        if (! $this->scopeConfig->isSetFlag(self::XML_PATH_RUM_ENABLED, ScopeConfigInterface::SCOPE_TYPE_DEFAULT)) {
             return false;
         }
 
@@ -112,6 +125,44 @@ class Config
 
         // Last-known remote config still has a key — keep RUM on when SaaS sync is temporarily blocked.
         return $this->getRumPublicKey() !== null;
+    }
+
+    public function isAttributionEnabled(): bool
+    {
+        if (! $this->scopeConfig->isSetFlag(self::XML_PATH_ATTRIBUTION_ENABLED, ScopeConfigInterface::SCOPE_TYPE_DEFAULT)) {
+            return false;
+        }
+
+        $remote = $this->getRemoteConfig();
+
+        return array_key_exists('attribution_enabled', $remote)
+            ? (bool) $remote['attribution_enabled']
+            : true;
+    }
+
+    /**
+     * How long a captured traffic source stays valid, in days.
+     */
+    public function getAttributionWindowDays(): int
+    {
+        $remote = $this->getRemoteConfig();
+        $days = isset($remote['attribution_window_days'])
+            ? (int) $remote['attribution_window_days']
+            : (int) $this->scopeConfig->getValue(
+                self::XML_PATH_ATTRIBUTION_WINDOW_DAYS,
+                ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+            );
+
+        if ($days < 1) {
+            return self::DEFAULT_ATTRIBUTION_WINDOW_DAYS;
+        }
+
+        return min($days, self::MAX_ATTRIBUTION_WINDOW_DAYS);
+    }
+
+    public function isCookieRestrictionModeEnabled(): bool
+    {
+        return $this->scopeConfig->isSetFlag(self::XML_PATH_COOKIE_RESTRICTION, ScopeConfigInterface::SCOPE_TYPE_STORE);
     }
 
     public function getRumPublicKey(): ?string
@@ -130,7 +181,7 @@ class Config
         $remote = $this->getRemoteConfig();
         $checks = $remote['security_patch_checks'] ?? [];
 
-        if (!is_array($checks)) {
+        if (! is_array($checks)) {
             return [];
         }
 

@@ -1,0 +1,9 @@
+<?php if (!$block->isEnabled()) {
+    return;
+}
+?>
+<script src="<?= $block->escapeUrl($block->getScriptUrl()) ?>"
+        data-mw-days="<?= $block->escapeHtmlAttr((string) $block->getWindowDays()) ?>"
+        data-mw-restrict="<?= $block->isCookieRestrictionModeEnabled() ? '1' : '0' ?>"
+        data-mw-website="<?= $block->escapeHtmlAttr($block->getWebsiteId()) ?>"
+        defer></script>

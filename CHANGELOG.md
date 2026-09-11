@@ -3,6 +3,41 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.31] - 2026-09-11
+
+### Changed
+
+- **Bestsellers:** prefer Magento `sales_bestsellers_aggregated_daily` and cache the top-SKU list for 1 hour. Stock check on that list still runs every heartbeat. Raw `sales_order_item` GROUP BY is the fallback only.
+- **cron_schedule:** `last_success` per group is `MAX(finished_at)` with a job_code filter — no 2000-row PHP scan. Row count uses `information_schema.TABLE_ROWS` instead of `COUNT(*)`.
+- **CMS integrity:** full `cms_block` / `cms_page` walk at most once an hour. Every heartbeat still rescans rows with `update_time` in the last 2 hours. `core_config_data` stays live.
+- **Heartbeat cadence:** `catalog_health` and `composer` collect live every 60 minutes, `report` every 15. Last payload section is reused so SaaS snapshots stay complete. `magewatch:send` and Test Connection force a refresh.
+
+[1.2.31]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.31
+
+## [1.2.30] - 2026-09-11
+
+### Fixed
+
+- **pub/media walk:** the 5-minute security scan no longer recursively stats product image trees (`media/catalog/product`, `media/catalog/category`), `pub/static`, or cache/captcha dumps. PHP drops in `pub/`, `pub/media/*.php`, and `wysiwyg` are still reported. Hard cap: 2500 inodes, 80 PHP files, depth 8.
+
+[1.2.30]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.30
+
+## [1.2.29] - 2026-09-10
+
+### Added
+
+- **Fulfillment tracks:** collector `fulfillment` sends open Magento `sales_shipment_track` rows (increment ID, tracking number, Magento carrier code/title, order total). No Packlink, no customer PII. SaaS resolves the underlying carrier and polls tracking once a day.
+
+[1.2.29]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.29
+
+## [1.2.28] - 2026-09-10
+
+### Added
+
+- **Order campaign attribution:** storefront script writes a first-party `mw_attr` cookie (UTM, click IDs, referrer) so Varnish/FPC cannot strip the landing tags. On `checkout_submit_all_after` the agent stores first-touch and last-touch against the order in `magewatch_order_attribution`. The new `order_attribution` collector sends 7-day aggregates (day × source/medium/campaign → orders + revenue) — no increment IDs or click IDs leave the store. Cookie lifetime default 30 days; respects Magento cookie restriction, GPC, Cookiebot and OneTrust.
+
+[1.2.28]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.28
+
 ## [1.2.27] - 2026-08-14
 
 ### Added

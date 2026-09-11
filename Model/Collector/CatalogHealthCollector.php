@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MageWatch\Agent\Model\Collector;
 
+use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\DB\Select;
@@ -28,12 +29,17 @@ class CatalogHealthCollector implements CollectorInterface
 
     private const SAMPLE_LIMIT = 10;
 
+    private const BESTSELLERS_CACHE_KEY = 'magewatch_bestsellers_top';
+
+    private const BESTSELLERS_CACHE_TTL = 3600;
+
     /** Catalog / Search / Both — excludes Not Visible Individually. */
     private const VISIBLE_VALUES = [2, 3, 4];
 
     public function __construct(
         private readonly ResourceConnection $resourceConnection,
-        private readonly Clock $clock
+        private readonly Clock $clock,
+        private readonly CacheInterface $cache,
     ) {}
 
     public function getCode(): string
@@ -218,29 +224,7 @@ class CatalogHealthCollector implements CollectorInterface
      */
     private function bestsellersOutOfStock(AdapterInterface $connection): array
     {
-        $orderItem = $this->table('sales_order_item');
-        if (! $connection->isTableExists($orderItem)) {
-            return [];
-        }
-
-        $since = $this->clock->now()
-            ->modify(sprintf('-%d days', self::BESTSELLER_DAYS))
-            ->format('Y-m-d H:i:s');
-
-        $select = $connection->select()
-            ->from($orderItem, [
-                'sku' => 'sku',
-                'qty_ordered' => new Expression('SUM(qty_ordered)'),
-            ])
-            ->where('created_at >= ?', $since)
-            ->where('parent_item_id IS NULL')
-            ->where('sku IS NOT NULL')
-            ->where('sku != ?', '')
-            ->group('sku')
-            ->order('qty_ordered DESC')
-            ->limit(self::BESTSELLER_LIMIT);
-
-        $top = $connection->fetchAll($select);
+        $top = $this->topSellingSkus($connection);
         if ($top === []) {
             return [];
         }
@@ -271,6 +255,132 @@ class CatalogHealthCollector implements CollectorInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Top SKUs for the last 30 days. Prefer Magento's bestsellers report table
+     * (already aggregated) and remember the list for an hour so the 5-minute
+     * heartbeat never GROUP BYs sales_order_item.
+     *
+     * @return list<array{sku: string, qty_ordered: float}>
+     */
+    private function topSellingSkus(AdapterInterface $connection): array
+    {
+        $cached = $this->cache->load(self::BESTSELLERS_CACHE_KEY);
+        if (is_string($cached) && $cached !== '') {
+            $decoded = json_decode($cached, true);
+            if (is_array($decoded)) {
+                return $this->normalizeTopSellers($decoded);
+            }
+        }
+
+        $top = $this->fetchTopSellersFromAggregate($connection, 0);
+        if ($top === []) {
+            $top = $this->fetchTopSellersFromAggregate($connection, null);
+        }
+        if ($top === []) {
+            $top = $this->fetchTopSellersFromOrderItems($connection);
+        }
+
+        $this->cache->save(
+            (string) json_encode($top),
+            self::BESTSELLERS_CACHE_KEY,
+            ['MAGEWATCH'],
+            self::BESTSELLERS_CACHE_TTL
+        );
+
+        return $top;
+    }
+
+    /**
+     * @return list<array{sku: string, qty_ordered: float}>
+     */
+    private function fetchTopSellersFromAggregate(AdapterInterface $connection, ?int $storeId): array
+    {
+        $bestsellers = $this->table('sales_bestsellers_aggregated_daily');
+        $product = $this->table('catalog_product_entity');
+        if (! $connection->isTableExists($bestsellers) || ! $connection->isTableExists($product)) {
+            return [];
+        }
+
+        $since = $this->clock->now()
+            ->modify(sprintf('-%d days', self::BESTSELLER_DAYS))
+            ->format('Y-m-d');
+
+        $select = $connection->select()
+            ->from(['b' => $bestsellers], [
+                'sku' => 'p.sku',
+                'qty_ordered' => new Expression('SUM(b.qty_ordered)'),
+            ])
+            ->join(['p' => $product], 'p.entity_id = b.product_id', [])
+            ->where('b.period >= ?', $since)
+            ->where('p.sku IS NOT NULL')
+            ->where('p.sku != ?', '')
+            ->group('p.sku')
+            ->order(new Expression('SUM(b.qty_ordered) DESC'))
+            ->limit(self::BESTSELLER_LIMIT);
+
+        if ($storeId === null) {
+            $select->where('b.store_id > ?', 0);
+        } else {
+            $select->where('b.store_id = ?', $storeId);
+        }
+
+        return $this->normalizeTopSellers($connection->fetchAll($select));
+    }
+
+    /**
+     * @return list<array{sku: string, qty_ordered: float}>
+     */
+    private function fetchTopSellersFromOrderItems(AdapterInterface $connection): array
+    {
+        $orderItem = $this->table('sales_order_item');
+        if (! $connection->isTableExists($orderItem)) {
+            return [];
+        }
+
+        $since = $this->clock->now()
+            ->modify(sprintf('-%d days', self::BESTSELLER_DAYS))
+            ->format('Y-m-d H:i:s');
+
+        $select = $connection->select()
+            ->from($orderItem, [
+                'sku' => 'sku',
+                'qty_ordered' => new Expression('SUM(qty_ordered)'),
+            ])
+            ->where('created_at >= ?', $since)
+            ->where('parent_item_id IS NULL')
+            ->where('sku IS NOT NULL')
+            ->where('sku != ?', '')
+            ->group('sku')
+            ->order('qty_ordered DESC')
+            ->limit(self::BESTSELLER_LIMIT);
+
+        return $this->normalizeTopSellers($connection->fetchAll($select));
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array{sku: string, qty_ordered: float}>
+     */
+    private function normalizeTopSellers(array $rows): array
+    {
+        $top = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $sku = (string) ($row['sku'] ?? '');
+            if ($sku === '') {
+                continue;
+            }
+            $top[] = [
+                'sku' => $sku,
+                'qty_ordered' => round((float) ($row['qty_ordered'] ?? 0), 2),
+            ];
+        }
+
+        return $top;
     }
 
     /**

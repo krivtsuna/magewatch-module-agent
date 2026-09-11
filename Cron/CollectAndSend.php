@@ -10,6 +10,8 @@ use Throwable;
 
 /**
  * Full metric collection — runs every five minutes in the magewatch cron group.
+ * Fat collectors (catalog, composer, reports) reuse a cached section; CMS is
+ * hourly + incremental. See CollectorCadence.
  */
 class CollectAndSend
 {

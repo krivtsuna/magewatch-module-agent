@@ -7,9 +7,11 @@ namespace MageWatch\Agent\Test\Unit\Model;
 use MageWatch\Agent\Api\CollectorInterface;
 use MageWatch\Agent\Model\Clock;
 use MageWatch\Agent\Model\CollectorPool;
+use MageWatch\Agent\Model\CollectorResultCache;
 use MageWatch\Agent\Model\Config;
 use MageWatch\Agent\Model\HealthRollup;
 use MageWatch\Agent\Model\PayloadBuilder;
+use Magento\Framework\App\CacheInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,7 +40,7 @@ class PayloadBuilderTest extends TestCase
         $cronCollector = $this->createCollector('cron', ['cron' => ['schedule_rows' => 100]]);
 
         $pool = new CollectorPool([$indexerCollector, $cronCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
+        $builder = $this->builder($pool);
 
         $payload = $builder->build();
 
@@ -66,7 +68,7 @@ class PayloadBuilderTest extends TestCase
         $queueCollector->expects($this->never())->method('collect');
 
         $pool = new CollectorPool([$indexerCollector, $queueCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
+        $builder = $this->builder($pool);
 
         $payload = $builder->build();
 
@@ -89,7 +91,7 @@ class PayloadBuilderTest extends TestCase
             ->with($this->stringContains('order_stats'));
 
         $pool = new CollectorPool([$goodCollector, $failingCollector]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
+        $builder = $this->builder($pool);
 
         $payload = $builder->build();
 
@@ -103,7 +105,7 @@ class PayloadBuilderTest extends TestCase
     public function testBuildHeartbeatPingIsMinimal(): void
     {
         $pool = new CollectorPool([]);
-        $builder = new PayloadBuilder($this->config, $pool, $this->clock, $this->logger, new HealthRollup);
+        $builder = $this->builder($pool);
 
         $payload = $builder->buildHeartbeatPing();
 
@@ -111,6 +113,56 @@ class PayloadBuilderTest extends TestCase
         $this->assertSame(PayloadBuilder::AGENT_VERSION, $payload['agent_version']);
         $this->assertArrayNotHasKey('indexers', $payload);
         $this->assertArrayNotHasKey('cron', $payload);
+    }
+
+    public function testBuildReusesCachedFatCollector(): void
+    {
+        $this->config->method('isCollectorEnabled')->willReturn(true);
+
+        $catalog = $this->createMock(CollectorInterface::class);
+        $catalog->method('getCode')->willReturn('catalog_health');
+        $catalog->expects($this->never())->method('collect');
+
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->method('load')->willReturn('{"catalog_health":{"missing_price":2}}');
+
+        $builder = $this->builder(new CollectorPool([$catalog]), new CollectorResultCache($cache));
+        $payload = $builder->build();
+
+        $this->assertSame(['missing_price' => 2], $payload['catalog_health']);
+    }
+
+    public function testBuildForceRefreshIgnoresCache(): void
+    {
+        $this->config->method('isCollectorEnabled')->willReturn(true);
+
+        $catalog = $this->createCollector('catalog_health', ['catalog_health' => ['missing_price' => 9]]);
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->expects($this->never())->method('load');
+        $cache->expects($this->once())->method('save');
+
+        $builder = $this->builder(new CollectorPool([$catalog]), new CollectorResultCache($cache));
+        $payload = $builder->build(true);
+
+        $this->assertSame(['missing_price' => 9], $payload['catalog_health']);
+    }
+
+    private function builder(CollectorPool $pool, ?CollectorResultCache $cache = null): PayloadBuilder
+    {
+        if ($cache === null) {
+            $frontend = $this->createMock(CacheInterface::class);
+            $frontend->method('load')->willReturn(false);
+            $cache = new CollectorResultCache($frontend);
+        }
+
+        return new PayloadBuilder(
+            $this->config,
+            $pool,
+            $this->clock,
+            $this->logger,
+            new HealthRollup,
+            $cache,
+        );
     }
 
     /**

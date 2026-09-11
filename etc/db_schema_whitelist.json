@@ -9,5 +9,35 @@
         "constraint": {
             "PRIMARY": true
         }
+    },
+    "magewatch_order_attribution": {
+        "column": {
+            "order_id": true,
+            "increment_id": true,
+            "store_id": true,
+            "first_source": true,
+            "first_medium": true,
+            "first_campaign": true,
+            "first_term": true,
+            "first_content": true,
+            "first_referrer_host": true,
+            "first_landing_path": true,
+            "first_touch_at": true,
+            "last_source": true,
+            "last_medium": true,
+            "last_campaign": true,
+            "last_term": true,
+            "last_content": true,
+            "last_referrer_host": true,
+            "last_landing_path": true,
+            "last_touch_at": true,
+            "click_id_type": true,
+            "click_id": true,
+            "created_at": true
+        },
+        "index": {},
+        "constraint": {
+            "PRIMARY": true
+        }
     }
 }

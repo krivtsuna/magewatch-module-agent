@@ -11,6 +11,7 @@ use MageWatch\Agent\Model\ConfigHygieneChecker;
 use MageWatch\Agent\Model\ContentIntegrityChecker;
 use MageWatch\Agent\Model\HealthStatus;
 use MageWatch\Agent\Model\PubPhpIntegrityChecker;
+use MageWatch\Agent\Model\PubTreeScanner;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
@@ -112,21 +113,14 @@ class SecurityCollector implements CollectorInterface
         $matches = [];
         $scanned = 0;
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($pubPath, \FilesystemIterator::SKIP_DOTS)
-        );
-
-        foreach ($iterator as $fileInfo) {
-            if (! $fileInfo->isFile() || strtolower($fileInfo->getExtension()) !== 'php') {
+        foreach ((new PubTreeScanner)->listPhpFiles($pubPath) as $pathname) {
+            $mtime = @filemtime($pathname);
+            if ($mtime !== false && $mtime < $cutoff) {
                 continue;
             }
 
-            if ($fileInfo->getMTime() < $cutoff) {
-                continue;
-            }
-
-            $relative = $this->relativePubPath($pubPath, $fileInfo->getPathname());
-            $chunk = @file_get_contents($fileInfo->getPathname(), false, null, 0, self::FILE_READ_BYTES);
+            $relative = $this->relativePubPath($pubPath, $pathname);
+            $chunk = @file_get_contents($pathname, false, null, 0, self::FILE_READ_BYTES);
 
             if ($chunk === false) {
                 continue;

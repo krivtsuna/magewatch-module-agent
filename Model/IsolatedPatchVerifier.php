@@ -27,7 +27,7 @@ class IsolatedPatchVerifier
         $results = [];
 
         foreach ($checks as $check) {
-            if (!is_array($check)) {
+            if (! is_array($check)) {
                 continue;
             }
 
@@ -38,18 +38,18 @@ class IsolatedPatchVerifier
             $markerContains = $check['marker_contains'] ?? [];
 
             if (
-                !is_string($patchId) || $patchId === ''
-                || !is_string($bulletinId) || $bulletinId === ''
-                || !is_string($isolatedBase) || $isolatedBase === ''
-                || (!is_array($markerFiles) && !is_array($markerContains))
+                ! is_string($patchId) || $patchId === ''
+                || ! is_string($bulletinId) || $bulletinId === ''
+                || ! is_string($isolatedBase) || $isolatedBase === ''
+                || (! is_array($markerFiles) && ! is_array($markerContains))
             ) {
                 continue;
             }
 
-            if (!is_array($markerFiles)) {
+            if (! is_array($markerFiles)) {
                 $markerFiles = [];
             }
-            if (!is_array($markerContains)) {
+            if (! is_array($markerContains)) {
                 $markerContains = [];
             }
 
@@ -66,11 +66,11 @@ class IsolatedPatchVerifier
             $root = rtrim($magentoRoot, '/\\');
 
             foreach ($markerFiles as $relativePath) {
-                if (!is_string($relativePath) || $relativePath === '') {
+                if (! is_string($relativePath) || $relativePath === '') {
                     continue;
                 }
 
-                $absolutePath = $root . '/' . ltrim($relativePath, '/');
+                $absolutePath = $root.'/'.ltrim($relativePath, '/');
                 if (is_readable($absolutePath)) {
                     $present[] = $relativePath;
                 } else {
@@ -79,24 +79,25 @@ class IsolatedPatchVerifier
             }
 
             foreach ($markerContains as $spec) {
-                if (!is_array($spec)) {
+                if (! is_array($spec)) {
                     continue;
                 }
 
                 $relativePath = $spec['path'] ?? null;
                 $needle = $spec['contains'] ?? null;
-                if (!is_string($relativePath) || $relativePath === '' || !is_string($needle) || $needle === '') {
+                if (! is_string($relativePath) || $relativePath === '' || ! is_string($needle) || $needle === '') {
                     continue;
                 }
 
-                $absolutePath = $root . '/' . ltrim($relativePath, '/');
-                if (!is_readable($absolutePath)) {
+                $absolutePath = $root.'/'.ltrim($relativePath, '/');
+                if (! is_readable($absolutePath)) {
                     $missing[] = $relativePath;
+
                     continue;
                 }
 
                 $contents = @file_get_contents($absolutePath);
-                if (!is_string($contents) || !str_contains($contents, $needle)) {
+                if (! is_string($contents) || ! str_contains($contents, $needle)) {
                     $missing[] = $relativePath;
                 } else {
                     $present[] = $relativePath;

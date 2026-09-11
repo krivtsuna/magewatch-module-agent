@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <!--
+        Global (not frontend-only) so GraphQL/PWA placeOrder still records a
+        cookie that arrived with the request. Admin / REST orders without the
+        cookie are a no-op inside the recorder.
+    -->
+    <event name="checkout_submit_all_after">
+        <observer name="magewatch_record_order_attribution" instance="MageWatch\Agent\Observer\RecordOrderAttribution"/>
+    </event>
+</config>

@@ -7,6 +7,9 @@ namespace MageWatch\Agent\Model;
 /**
  * Validates PHP files under pub/ against Magento core expectations.
  *
+ * Product image trees under media/catalog/{product,category} are not walked
+ * (see PubTreeScanner) — that used to stat every jpg on the 5-minute cron.
+ *
  * @see https://github.com/magento/magento2-base/tree/2.4-develop/pub
  */
 class PubPhpIntegrityChecker
@@ -72,7 +75,7 @@ class PubPhpIntegrityChecker
 
         $mediaPath = $pubPath.'media'.DIRECTORY_SEPARATOR;
         if (is_dir($mediaPath)) {
-            foreach ($this->listPhpFilesRecursive($mediaPath) as $file) {
+            foreach ((new PubTreeScanner)->listPhpFiles($mediaPath) as $file) {
                 $unexpected[] = $this->relativePubPath($pubPath, $file);
             }
         }

@@ -23,7 +23,13 @@
                 <infrastructure>1</infrastructure>
                 <database>1</database>
                 <catalog_health>1</catalog_health>
+                <order_attribution>1</order_attribution>
+                <fulfillment>1</fulfillment>
             </collectors>
+            <attribution>
+                <enabled>1</enabled>
+                <window_days>30</window_days>
+            </attribution>
         </magewatch>
     </default>
 </config>

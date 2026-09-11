@@ -58,7 +58,7 @@ class SendCommand extends Command
             return Command::FAILURE;
         }
 
-        $payload = $this->payloadBuilder->build();
+        $payload = $this->payloadBuilder->build(true);
         $result = $this->httpClient->send($endpointUrl, $siteToken, $payload);
 
         if (!$result->isSuccess()) {

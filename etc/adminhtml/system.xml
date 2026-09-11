@@ -52,6 +52,25 @@
                     <frontend_model>MageWatch\Agent\Block\Adminhtml\System\Config\TestPing</frontend_model>
                 </field>
             </group>
+            <group id="attribution" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Order campaign attribution</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enabled</label>
+                    <comment>Captures utm/click-id/referrer into a first-party cookie and stores first + last touch against each placed order. Respects Magento cookie restriction mode and common CMP banners. Disable to stop the storefront script without uninstalling the agent.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="agent/enabled">1</field>
+                    </depends>
+                </field>
+                <field id="window_days" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Attribution window (days)</label>
+                    <comment>How long a captured traffic source stays valid. Default: 30.</comment>
+                    <validate>validate-number validate-greater-than-zero</validate>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
             <group id="collectors" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Collectors</label>
                 <field id="indexer" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -111,6 +130,16 @@
                 <field id="catalog_health" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Catalog Health Collector</label>
                     <comment>Aggregate buyability signals (missing price/image, configurables without options, OOS bestsellers). SKUs only — no PII.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="order_attribution" translate="label comment" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Order Attribution Collector</label>
+                    <comment>Daily order counts and revenue grouped by campaign (aggregates only — no order numbers or click IDs).</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="fulfillment" translate="label comment" type="select" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Fulfillment tracks</label>
+                    <comment>Sends Magento shipment tracking numbers, carrier title, increment ID and order total. No customer name, email, or address. SaaS resolves the real carrier and polls it once a day.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
             </group>
