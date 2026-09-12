@@ -11,7 +11,8 @@ use MageWatch\Agent\Model\Clock;
 
 /**
  * Open Magento shipment tracks for SaaS to resolve the underlying carrier
- * and poll its API/page. No Packlink. No customer name, email, or address.
+ * and poll its API/page. Destination region/city/country/postcode only —
+ * no customer name, email, phone, or street.
  */
 class FulfillmentTrackCollector implements CollectorInterface
 {
@@ -37,6 +38,7 @@ class FulfillmentTrackCollector implements CollectorInterface
         $orders = $this->resourceConnection->getTableName('sales_order');
         $shipments = $this->resourceConnection->getTableName('sales_shipment');
         $tracks = $this->resourceConnection->getTableName('sales_shipment_track');
+        $addresses = $this->resourceConnection->getTableName('sales_order_address');
 
         if (! $connection->isTableExists($orders)
             || ! $connection->isTableExists($shipments)
@@ -49,7 +51,14 @@ class FulfillmentTrackCollector implements CollectorInterface
             ->modify(sprintf('-%d days', self::WINDOW_DAYS))
             ->format('Y-m-d H:i:s');
 
-        return $this->payload($this->rows($connection, $orders, $shipments, $tracks, $since));
+        return $this->payload($this->rows(
+            $connection,
+            $orders,
+            $shipments,
+            $tracks,
+            $since,
+            $connection->isTableExists($addresses) ? $addresses : null,
+        ));
     }
 
     /**
@@ -60,7 +69,8 @@ class FulfillmentTrackCollector implements CollectorInterface
         string $orders,
         string $shipments,
         string $tracks,
-        string $since
+        string $since,
+        ?string $addresses
     ): array {
         $select = $connection->select()
             ->from(['t' => $tracks], [
@@ -77,7 +87,22 @@ class FulfillmentTrackCollector implements CollectorInterface
                 'order_status' => 'o.status',
                 'order_total' => 'o.base_grand_total',
                 'currency' => 'o.base_currency_code',
-            ])
+            ]);
+
+        if ($addresses !== null) {
+            $select->joinLeft(
+                ['a' => $addresses],
+                "a.parent_id = o.entity_id AND a.address_type = 'shipping'",
+                [
+                    'ship_country' => 'a.country_id',
+                    'ship_region' => 'a.region',
+                    'ship_city' => 'a.city',
+                    'ship_postcode' => 'a.postcode',
+                ]
+            );
+        }
+
+        $select
             ->where('t.track_number IS NOT NULL')
             ->where('t.track_number != ?', '')
             ->where('s.created_at >= ?', $since)
@@ -102,6 +127,10 @@ class FulfillmentTrackCollector implements CollectorInterface
                 'currency' => (string) ($row['currency'] ?? ''),
                 'shipped_at' => $this->atom((string) ($row['shipped_at'] ?? '')),
                 'track_created_at' => $this->atom((string) ($row['track_created_at'] ?? '')),
+                'ship_country' => (string) ($row['ship_country'] ?? ''),
+                'ship_region' => (string) ($row['ship_region'] ?? ''),
+                'ship_city' => (string) ($row['ship_city'] ?? ''),
+                'ship_postcode' => (string) ($row['ship_postcode'] ?? ''),
             ];
         }
 

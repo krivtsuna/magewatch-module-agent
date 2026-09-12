@@ -44,6 +44,7 @@ class FulfillmentTrackCollectorTest extends TestCase
         $select = $this->createMock(Select::class);
         $select->method('from')->willReturnSelf();
         $select->method('join')->willReturnSelf();
+        $select->method('joinLeft')->willReturnSelf();
         $select->method('where')->willReturnSelf();
         $select->method('order')->willReturnSelf();
         $select->method('limit')->willReturnSelf();
@@ -62,6 +63,10 @@ class FulfillmentTrackCollectorTest extends TestCase
                 'order_status' => 'complete',
                 'order_total' => 11.94,
                 'currency' => 'EUR',
+                'ship_country' => 'ES',
+                'ship_region' => 'Alicante',
+                'ship_city' => 'Alicante',
+                'ship_postcode' => '03001',
             ],
         ]);
 
@@ -78,8 +83,13 @@ class FulfillmentTrackCollectorTest extends TestCase
         $this->assertSame('000000036', $track['increment_id']);
         $this->assertSame('PQ6C8N0732237700108005X', $track['track_number']);
         $this->assertSame('Correos', $track['carrier_title']);
+        $this->assertSame('ES', $track['ship_country']);
+        $this->assertSame('Alicante', $track['ship_region']);
+        $this->assertSame('03001', $track['ship_postcode']);
         $this->assertArrayNotHasKey('customer_email', $track);
         $this->assertArrayNotHasKey('customer_name', $track);
+        $this->assertArrayNotHasKey('street', $track);
+        $this->assertArrayNotHasKey('telephone', $track);
         $this->assertArrayNotHasKey('packlink_reference', $track);
     }
 }

@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.33] - 2026-09-12
+
+### Changed
+
+- **Fulfillment tracks:** include Magento shipping `region`, `city`, `country_id`, and `postcode`. Still no name, email, phone, or street.
+
+[1.2.33]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.33
+
 ## [1.2.32] - 2026-09-11
 
 ### Fixed
