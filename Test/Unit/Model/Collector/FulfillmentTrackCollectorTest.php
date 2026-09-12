@@ -67,6 +67,7 @@ class FulfillmentTrackCollectorTest extends TestCase
                 'ship_region' => 'Alicante',
                 'ship_city' => 'Alicante',
                 'ship_postcode' => '03001',
+                'ship_phone' => '666123456',
             ],
         ]);
 
@@ -86,6 +87,7 @@ class FulfillmentTrackCollectorTest extends TestCase
         $this->assertSame('ES', $track['ship_country']);
         $this->assertSame('Alicante', $track['ship_region']);
         $this->assertSame('03001', $track['ship_postcode']);
+        $this->assertSame('666123456', $track['ship_phone']);
         $this->assertArrayNotHasKey('customer_email', $track);
         $this->assertArrayNotHasKey('customer_name', $track);
         $this->assertArrayNotHasKey('street', $track);

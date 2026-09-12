@@ -11,8 +11,8 @@ use MageWatch\Agent\Model\Clock;
 
 /**
  * Open Magento shipment tracks for SaaS to resolve the underlying carrier
- * and poll its API/page. Destination region/city/country/postcode only —
- * no customer name, email, phone, or street.
+ * and poll its API/page. Destination region/city/country/postcode/phone only —
+ * no customer name, email, or street.
  */
 class FulfillmentTrackCollector implements CollectorInterface
 {
@@ -98,6 +98,7 @@ class FulfillmentTrackCollector implements CollectorInterface
                     'ship_region' => 'a.region',
                     'ship_city' => 'a.city',
                     'ship_postcode' => 'a.postcode',
+                    'ship_phone' => 'a.telephone',
                 ]
             );
         }
@@ -131,6 +132,7 @@ class FulfillmentTrackCollector implements CollectorInterface
                 'ship_region' => (string) ($row['ship_region'] ?? ''),
                 'ship_city' => (string) ($row['ship_city'] ?? ''),
                 'ship_postcode' => (string) ($row['ship_postcode'] ?? ''),
+                'ship_phone' => (string) ($row['ship_phone'] ?? ''),
             ];
         }
 

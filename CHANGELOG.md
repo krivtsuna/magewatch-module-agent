@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.34] - 2026-09-12
+
+### Changed
+
+- **Fulfillment tracks:** include Magento shipping `telephone` as `ship_phone` for carrier lookup forms. Still no name, email, or street.
+
+[1.2.34]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.34
+
 ## [1.2.33] - 2026-09-12
 
 ### Changed
