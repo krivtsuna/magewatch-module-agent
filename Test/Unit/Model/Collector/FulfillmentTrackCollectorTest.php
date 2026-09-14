@@ -34,7 +34,7 @@ class FulfillmentTrackCollectorTest extends TestCase
         $clock = $this->createMock(Clock::class);
 
         $this->assertSame(
-            ['fulfillment' => ['window_days' => 90, 'tracks' => []]],
+            ['fulfillment' => ['window_days' => 14, 'tracks' => []]],
             (new FulfillmentTrackCollector($resource, $clock))->collect(),
         );
     }

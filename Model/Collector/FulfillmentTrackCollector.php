@@ -18,7 +18,7 @@ class FulfillmentTrackCollector implements CollectorInterface
 {
     public const CODE = 'fulfillment';
 
-    private const WINDOW_DAYS = 90;
+    private const WINDOW_DAYS = 14;
 
     private const MAX_TRACKS = 200;
 

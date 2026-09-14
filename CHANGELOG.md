@@ -3,6 +3,14 @@
 All notable changes to `magewatch/module-agent` are documented here.
 Version numbers follow [SemVer](https://semver.org/). Packagist reads versions from Git tags.
 
+## [1.2.35] - 2026-09-14
+
+### Changed
+
+- **Fulfillment tracks:** first collect is the last 14 days only. Later heartbeats send that window so new shipments appear without pulling 90-day Magento history.
+
+[1.2.35]: https://github.com/krivtsuna/magewatch-module-agent/releases/tag/1.2.35
+
 ## [1.2.34] - 2026-09-12
 
 ### Changed
